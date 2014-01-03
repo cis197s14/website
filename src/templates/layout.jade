@@ -1,0 +1,19 @@
+doctype html
+html
+  head
+    title CIS 197 JavaScript
+    meta(charset='utf-8')
+    meta(name='description', content='UPenn CIS 197 course website')
+    meta(name='viewport', content='width=device-width, initial-scale=1.0')
+    meta('http-equiv'='X-UA-Compatible', content='IE=edge,chrome=1')
+    link(rel='shortcut icon', href='assets/images/favicon.png')
+    block stylesheets
+      link(rel='stylesheet', type='text/css', href='http://fonts.googleapis.com/css?family=Source+Sans+Pro:400,700,400italic,700italic|Montserrat:400,700|Inconsolata:400,700')
+      link(rel='stylesheet', type='text/css', href='build/css/vendor/pure-min.css')
+      link(rel='stylesheet', type='text/css', href='build/css/main.css')
+
+  body
+    block content
+
+  block scripts
+    script('data-main'='build/javascripts/optimized.min.js', src='build/javascripts/vendor/require.min.js')

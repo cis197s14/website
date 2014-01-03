@@ -1,0 +1,15 @@
+extends layout
+
+block content
+  .pure-g-r.main-content.index-page
+
+    include partials/sidebar
+
+    section.pure-u-3-4.home.active
+      include content/home
+
+    section.pure-u-3-4.assignments
+      include content/assignments
+
+    section.pure-u-3-4.lectures
+      include content/lectures
