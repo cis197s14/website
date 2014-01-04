@@ -3,11 +3,8 @@ define (require, exports, module) ->
 
   $ = require 'jquery'
 
-  # TODO: fix loading
-  module.exports =
-    init: () ->
-      console.log 'init'
+  $ ->
+    console.log 'dom ready'
 
-      $ ->
-        console.log 'dom ready'
-
+# We need to actually require 'main' for it to load
+require ['main']

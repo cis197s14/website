@@ -23,10 +23,11 @@ a:link {
   box-sizing: border-box; }
 
 ul, ol {
-  padding: 0; }
+  padding: 0 0 0 25px; }
   ul.no-style, ol.no-style {
     list-style: none;
-    margin: 0; }
+    margin: 0;
+    padding: 0; }
 
 html, body {
   height: 100%; }

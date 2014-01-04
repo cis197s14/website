@@ -33,10 +33,11 @@ module.exports = (grunt) ->
       compile:
         options:
           name: 'main'
-          optimize: 'uglify'
+          optimize: 'none'
           baseUrl: 'app/assets/javascripts'
           mainConfigFile: 'app/assets/javascripts/config.js'
-          out: 'app/build/javascripts/optimized.min.js'
+          include: 'requireLib'
+          out: 'app/build/javascripts/main-optimized.min.js'
 
     # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 

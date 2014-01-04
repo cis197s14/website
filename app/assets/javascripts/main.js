@@ -2,14 +2,11 @@
   define(function(require, exports, module) {
     var $;
     $ = require('jquery');
-    return module.exports = {
-      init: function() {
-        console.log('init');
-        return $(function() {
-          return console.log('dom ready');
-        });
-      }
-    };
+    return $(function() {
+      return console.log('dom ready');
+    });
   });
+
+  require(['main']);
 
 }).call(this);
