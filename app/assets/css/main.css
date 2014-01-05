@@ -54,6 +54,19 @@ input {
   input:focus {
     background: rgba(255, 255, 255, 0.4); }
 
+table thead {
+  border-top: dotted 1px #cccccc;
+  font-weight: bold; }
+table tr {
+  border-top: dotted 1px #cccccc; }
+  table tr:last-child {
+    border-bottom: dotted 1px #cccccc; }
+table td {
+  padding: 0.4em;
+  border-left: dotted 1px #cccccc; }
+  table td:last-child {
+    border-right: dotted 1px #cccccc; }
+
 .hidden {
   display: none; }
 
@@ -61,8 +74,9 @@ input {
   clear: both; }
 
 #logo {
+  display: block;
   width: 120px;
-  display: block; }
+  margin-left: -10px; }
 
 .pure-menu {
   position: fixed; }
@@ -96,12 +110,14 @@ input {
 
 .main-content section {
   display: none;
-  margin-left: 230px;
-  width: 500px; }
+  margin-left: 200px; }
   .main-content section.active {
     display: block; }
 
 @media (max-width: 888px) {
+  #logo {
+    display: none; }
+
   .pure-menu {
     position: relative; }
     .pure-menu.pure-menu-open {
