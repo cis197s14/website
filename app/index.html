@@ -59,7 +59,7 @@ assignment with no penalty, no questions asked.</p>
       <section class="pure-u-3-4 assignments"><h2 id="assignments">Assignments</h2>
 <p>Assignments are due on <strong>Wednesday at 9am</strong> unless otherwise indicated.
 Code submissions are to be made using the Github submission system.</p>
-<p>[0] <strong>Due Jan. 29</strong>: Set up Github submission.</p>
+<p>[0] <strong>Due Jan. 29</strong>: <a href="#github">Set up Github submission</a>.</p>
 <p>[1] <strong>Due Feb. 5</strong>: Finger exercises.</p>
 <p>[2] <strong>Due Feb. 19</strong>: jQuery mini-project.</p>
 <p>[3] <strong>Due March 5</strong>: Simple Backbone.js app.</p>
@@ -232,6 +232,126 @@ available in April.</p>
 <p><a href="http://www.amazon.com/JavaScript-Good-Parts-Douglas-Crockford/dp/0596517742"><em>JavaScript: The Good Parts</em></a> – Douglas Crockford</p>
 <p><a href="http://eloquentjavascript.net/"><em>Eloquent JavaScript</em></a> – Marijn Haverbeke</p>
 <p><a href="http://addyosmani.github.io/backbone-fundamentals/"><em>Developing Backbone.js Applications</em></a> (DBA) - Addy Osmani</p>
+
+      </section>
+      <section class="pure-u-3-4 github"><h1 id="cis197-code-submission">CIS197 Code Submission</h1>
+<p>CIS 197 (January 22, 2013)</p>
+<p><em>Adapted from <a href="http://www.seas.upenn.edu/~cis192/spring2013/submission/hwsubmission.html">CIS 192</a></em>.</p>
+<h3 id="prerequisites">Prerequisites</h3>
+<ul>
+<li>Mac or Linux environment. Windows works too, but some commands will be
+different and you are responsible for figuring out the differences.</li>
+<li>Git installed in your development environment &amp; some basic knowledge of git
+commands. If you need to boost your git skills, try
+<a href="http://help.github.com/">Github help</a>, <a href="http://try.github.io/">Try Git</a>, <a href="http://gitimmersion.com/">Git
+Immersion</a>, and/or
+<a href="http://marklodato.github.io/visual-git-guide/index-en.html">A Visual Git Reference</a>.</li>
+<li>A <a href="http://github.com">Github</a> account. Feel free to use the one you have
+already.</li>
+</ul>
+<h3 id="setup">Setup</h3>
+<p><em>Note</em>: This system is still in beta. If you encounter errors in this guide or
+the course website, please post a private <a href="https://piazza.com/class/hpz2ie7jeo0sx">Piazza</a>
+question. If you have a question about Git or Github, please post a public
+question.</p>
+<ol>
+<li><p>Complete the <a href="https://docs.google.com/forms/d/1ldp1D0eU4ZBYM_X12Qyloy_ZPJD9jWv6ClguegiJ5L4/viewform">intro survey</a>
+if you haven&#39;t already. Once you get an email
+saying you have been added to the <strong>cis197s14</strong> organization, you may proceed
+with the next steps.</p>
+</li>
+<li><p>Log onto Github. Change your view to the CIS 197 class context.
+<img src="/build/images/github/context.png" alt="switch
+context"></p>
+</li>
+<li><p>Click on the repository we&#39;ve created for your homework. The name will be in
+the format <strong>&quot;hw_pennkey&quot;</strong>. Note this repository is private; only you and
+the instructors have access to it.
+<img src="/build/images/github/repo-name.png" alt="repo name"></p>
+</li>
+<li><p>Copy the repository url from its page.
+<img src="/build/images/github/repo-url.png" alt="repo url"></p>
+</li>
+<li><p>Open your terminal. You&#39;re going to clone a copy of this repository so that
+you can do work on it and push updates back to Github. First <code>cd</code> into the
+directory you want the homework folder in (if you don&#39;t know what that means,
+please take a few minutes to read Section 3 of <a href="http://heather.cs.ucdavis.edu/~matloff/UnixAndC/Unix/UnixBareMn.pdf">this document</a>. Now execute:</p>
+<pre><code> git clone repo_url_you_copied
+</code></pre><p>put together, that all looks like</p>
+<pre><code> bash-3.2 $ cd ~/Github/cis197/
+
+ bash-3.2 $ git clone https://github.com/cis197s14/hw_cis197bot.git
+ Cloning into &#39;hw_cis197bot&#39;...
+ Username for &#39;https://github.com&#39;: cis197bot
+ Password for &#39;https://cis197bot@github.com&#39;:
+ warning: You appeared to have cloned an empty repository.
+ Checking connectivity... done.
+ bash-3.2 $
+</code></pre><p>You&#39;ve now copied the (empty) repository onto our computer, so you can go into
+that directory:</p>
+<pre><code> bash-3.2 $ cd hw_cis197bot
+</code></pre></li>
+<li><p>Now you&#39;re going to add the class homework repository as an &quot;upstream&quot; to our
+personal homework repository. This will allow you to pull required homework
+files directly from Github. You&#39;ll need to execute the following command
+inside the directory you just cloned:</p>
+<pre><code> git remote add upstream https://github.com/cis197s14/hw.git
+</code></pre><p>This added the class repository as a git &quot;remote&quot;, which means that you can
+pull changes down from that repository and into your personal repository.
+Let&#39;s do that now. Run the command:</p>
+<pre><code> git pull upstream master
+</code></pre><p>and you should see that files were copied from the server.</p>
+</li>
+<li><p>Almost done. You need to create a git branch where your code will be
+submitted. First, create a new branch called &quot;submit&quot;:</p>
+<pre><code> git branch submit
+</code></pre><p>Now push that branch to Github:</p>
+<pre><code> git push origin submit
+</code></pre><p>And also push the master branch to Github:</p>
+<pre><code> git push origin master
+</code></pre></li>
+</ol>
+<p>Great! Now that the setup is done, you can get started on homework.</p>
+<h3 id="working-on-homework">Working on homework</h3>
+<ol>
+<li><p>First, get any files/folders that were added to the class homework
+repository:</p>
+<pre><code> git pull upstream master
+</code></pre></li>
+<li><p>Now complete your assignment. Please make sure to create a different folder
+in the repository for each homework assignment (<code>hw1</code>, <code>hw2</code>, etc.)</p>
+</li>
+<li><p>Here&#39;s how you commit to the repository and push the work to Github. Let&#39;s
+say you wrote code in two files, <code>file1.js</code> and <code>file2.js</code>, in the directory
+<code>hw1</code> inside your homework repository. First you need to stage all the
+relevant files:</p>
+<pre><code> git add hw1/file1.js hw1/file2.js
+</code></pre><p>Now make a commit:</p>
+<pre><code> git commit -m &quot;done with hw1&quot;
+</code></pre><p>Push changes to Github:</p>
+<pre><code> git push origin master
+</code></pre></li>
+<li><p>Now your homework files are on Github. All you need to do now is create
+a pull request to complete the submission. Go to your homework repository and
+create a new Pull Request from the Pull Requests tab.
+<img src="/build/images/github/pull-request.png" alt="pull request"></p>
+</li>
+<li><p>Set up a pull request with the base branch set as &quot;submit&quot;, and finally send
+it.
+<img src="/build/images/github/send-pull.png" alt="send pull"></p>
+</li>
+</ol>
+<p>Do not click the &quot;Merge Pull Request&quot; button on Github after your submission (a
+TA will do that after grading homework). Though we require that you <em>submit</em>
+your homework with git, it would be wise to use git to keep track of your
+changes before you submit.</p>
+<h3 id="notes">Notes</h3>
+<ul>
+<li>If you don&#39;t want to type your password every time you try to push or pull
+from Github, see the documentation on <a href="https://help.github.com/articles/set-up-git#password-caching">password caching</a>.</li>
+<li>Feel free to work on a branch other than <code>master</code> (if you know what that
+means), but please make pull requests against the <code>submit</code> branch.</li>
+</ul>
 
       </section>
     </div>
