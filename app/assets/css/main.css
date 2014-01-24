@@ -8,6 +8,13 @@ h1, h2, h3, h4, h5, h6 {
 code, pre {
   font-family: "Inconsolata"; }
 
+pre {
+  margin: 0;
+  padding: 0.5em;
+  border-radius: 3px;
+  background: #231f20;
+  color: white; }
+
 a:link {
   color: #084080;
   text-decoration: none; }

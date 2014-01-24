@@ -72,6 +72,14 @@ code, pre {
   font-family: $monospaceFont;
 }
 
+pre {
+  margin: 0;
+  padding: 0.5em;
+  border-radius: 3px;
+  background: $grayDark;
+  color: white;
+}
+
 a:link {
   color: $blue;
   text-decoration: none;
