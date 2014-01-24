@@ -121,6 +121,9 @@ table td {
   .main-content section.active {
     display: block; }
 
+.notes img {
+  display: block; }
+
 @media (max-width: 888px) {
   #logo {
     display: none; }
