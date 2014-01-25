@@ -1,3 +1,5 @@
+
+
 // Variables
 // ---------------------------------------------------------------------------
 $grayDark: #231f20;
@@ -10,6 +12,9 @@ $blue: lighten($blueDark, 10%);
 $redDark: #B53838;
 $red: lighten($redDark, 10%);
 $redLight: lighten($redDark, 20%);
+
+$yellowLight: #f8eec7;
+$yellowDark: #5C4C11;
 
 $borderColor: $blueDark;
 
@@ -78,6 +83,11 @@ pre {
   border-radius: 3px;
   background: $grayDark;
   color: white;
+}
+
+:not(pre) > code[class*="language-"] {
+  padding: 3px 4px;
+  border-radius: 2px;
 }
 
 a:link {
@@ -160,6 +170,11 @@ table {
       border-right: $border;
     }
   }
+}
+
+blockquote {
+  font-style: italic;
+  font-size: 1.2em;
 }
 
 .hidden { display: none; }

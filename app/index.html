@@ -8,6 +8,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
     <link rel="stylesheet" type="text/css" href="http://fonts.googleapis.com/css?family=Source+Sans+Pro:400,700,400italic,700italic|Montserrat:400,700|Inconsolata:400,700">
     <link rel="stylesheet" type="text/css" href="build/css/vendor/pure-min.css">
+    <link rel="stylesheet" type="text/css" href="build/css/vendor/prism.css">
     <link rel="stylesheet" type="text/css" href="build/css/main.css">
   </head>
   <body>
@@ -26,9 +27,12 @@
       <section class="pure-u-3-4 home active"><h2 id="javascript-spring-2014-">JavaScript (Spring 2014)</h2>
 <h3 id="intro-to-front-end-web-development">Intro to Front End Web Development</h3>
 <p>Course meets <strong>Wednesday 1:30pm – 3:00pm</strong> in <strong>Towne 337</strong>.</p>
-<p>Instructor: <strong>Adi Dahiya</strong> (adahiya@seas)</p>
-<p>TA: <strong>Kyle Hardgrave</strong> (kyleh@seas)</p>
-<p>TA: <strong>Greg Terrono</strong> (gterrono@seas)</p>
+<p>Instructor: <strong>Adi Dahiya</strong> <a href="&#x6d;&#x61;&#x69;&#108;&#116;&#x6f;&#x3a;&#97;&#100;&#97;&#x68;&#x69;&#x79;&#97;&#64;&#115;&#x65;&#97;&#115;">&#97;&#100;&#97;&#x68;&#x69;&#x79;&#97;&#64;&#115;&#x65;&#97;&#115;</a></p>
+<p>TAs:</p>
+<ul>
+<li><strong>Kyle Hardgrave</strong> <a href="&#x6d;&#x61;&#x69;&#x6c;&#116;&#x6f;&#x3a;&#107;&#x79;&#108;&#101;&#104;&#x40;&#115;&#x65;&#97;&#115;">&#107;&#x79;&#108;&#101;&#104;&#x40;&#115;&#x65;&#97;&#115;</a></li>
+<li><strong>Greg Terrono</strong> <a href="&#109;&#97;&#105;&#108;&#x74;&#111;&#58;&#103;&#x74;&#101;&#114;&#x72;&#x6f;&#110;&#111;&#64;&#115;&#101;&#x61;&#x73;">&#103;&#x74;&#101;&#114;&#x72;&#x6f;&#110;&#111;&#64;&#115;&#101;&#x61;&#x73;</a></li>
+</ul>
 <p>Office hours: See <a href="https://piazza.com/upenn/spring2014/cis197/staff">Piazza staff page</a></p>
 <h3 id="course-description">Course Description</h3>
 <p>This course provides an introduction to modern web development frameworks,
@@ -91,8 +95,10 @@ available in April.</p>
               <td>1</td>
               <td>1/22</td>
               <td>
-                JS basics & syntax <br/>
-                How to run JS client-side and server-side
+                <a href="#lecture1">
+                  JS basics & syntax <br/>
+                  How to run JS client-side and server-side
+                </a>
               </td>
               <td>Eloquent JS, Chapter 2</td>
               <td></td>
@@ -234,7 +240,7 @@ available in April.</p>
 <p><a href="http://addyosmani.github.io/backbone-fundamentals/"><em>Developing Backbone.js Applications</em></a> (DBA) - Addy Osmani</p>
 
       </section>
-      <section class="pure-u-3-4 github notes"><h1 id="cis197-code-submission">CIS197 Code Submission</h1>
+      <section class="pure-u-3-4 notes github language-bash"><h1 id="cis197-code-submission">CIS197 Code Submission</h1>
 <p>CIS 197 (January 22, 2013)</p>
 <p><em>Adapted from <a href="http://www.seas.upenn.edu/~cis192/spring2013/submission/hwsubmission.html">CIS 192</a></em>.</p>
 <h3 id="prerequisites">Prerequisites</h3>
@@ -354,7 +360,339 @@ means), but please make pull requests against the <code>submit</code> branch.</l
 </ul>
 
       </section>
+      <section class="pure-u-3-4 notes lecture1 language-javascript"><h1 id="lecture-1-intro-js-basics">Lecture 1: Intro &amp; JS Basics</h1>
+<p>CIS 197 (January 22, 2013)</p>
+<h2 id="course-description">Course Description</h2>
+<p>This course provides an introduction to modern web development frameworks,
+techniques, and practices used to deliver robust client side applications on
+the web. The emphasis will be on developing JavaScript programs that run in
+the browser, not server-side applications in traditional languages like Java,
+Python, or Ruby.</p>
+<p>This course is most useful for students who have some programming and web
+development experience and want to develop moderate JavaScript skills to be
+able to build complex, interactive applications in the browser.</p>
+<h2 id="intro">Intro</h2>
+<p>As a browser scripting language, one of JavaScript&#39;s main uses is to implement
+view logic -- how a user interface on the web is drawn, manipulated, and
+interacted with. But as the language has matured, its scope has widened. Today,
+you can do things like build a web server in JavaScript using Node.js or compile
+video games from C++ to JS using Emscripten to play Quake III in a browser.</p>
+<p>A few years ago, the traditional workflow of the front end developer was to get
+some JS (probably jQuery) code working locally, FTP it over to a server, and
+then handle the myriad cross-browser compatibility issues that ensued (*cough*
+IE6 *cough*). The past few years have seen somewhat of a transformation of the
+front end dev role, with a much greater emphasis on tools and practices. It&#39;s
+a result of:</p>
+<ul>
+<li>people taking front end more seriously,</li>
+<li>browsers getting MUCH better,</li>
+<li>and more programmers with traditional programming experience entering the
+ecosystem</li>
+</ul>
+<p>One of my goals in this class is to introduce you to modern tools, practices,
+and workflows in front end development. There&#39;s a sort of
+<a href="http://rmurphey.com/blog/2012/04/12/a-baseline-for-front-end-developers/">baseline</a>
+of things that you&#39;re expected to be familiar with (Node, npm, homebrew, git,
+tests, build systems, etc.) in order to be successful and not feel left behind.
+I&#39;ll talk more about this at the end of today&#39;s lecture.</p>
+<p>Today, I&#39;m going to talk about language basics like syntax and variable scoping
+and there won&#39;t be much mention of the web. As a programming language, JS is
+an implementation of the ECMAScript standard, which makes no reference to web
+technology. We&#39;re currently on v5 of ECMAScript, with v6 expected to be
+a significant expansion to the language due in 2014.</p>
+<p>Before we get into course material, some logistics...</p>
+<h2 id="logistics">Logistics</h2>
+<p>Course meets <strong>Wednesday 1:30pm – 3:00pm</strong> in <strong>Towne 337</strong>.</p>
+<p>Instructor: <strong>Adi Dahiya</strong> <a href="&#109;&#x61;&#x69;&#108;&#x74;&#111;&#58;&#x61;&#100;&#x61;&#104;&#x69;&#x79;&#x61;&#x40;&#x73;&#101;&#x61;&#x73;">&#x61;&#100;&#x61;&#104;&#x69;&#x79;&#x61;&#x40;&#x73;&#101;&#x61;&#x73;</a></p>
+<p>TAs:</p>
+<ul>
+<li><strong>Kyle Hardgrave</strong> <a href="&#x6d;&#x61;&#x69;&#x6c;&#x74;&#111;&#58;&#x6b;&#x79;&#x6c;&#101;&#x68;&#64;&#x73;&#101;&#x61;&#x73;">&#x6b;&#x79;&#x6c;&#101;&#x68;&#64;&#x73;&#101;&#x61;&#x73;</a></li>
+<li><strong>Greg Terrono</strong> <a href="&#x6d;&#x61;&#105;&#x6c;&#x74;&#111;&#x3a;&#103;&#x74;&#x65;&#114;&#114;&#111;&#x6e;&#x6f;&#x40;&#115;&#x65;&#x61;&#115;">&#103;&#x74;&#x65;&#114;&#114;&#111;&#x6e;&#x6f;&#x40;&#115;&#x65;&#x61;&#115;</a></li>
+</ul>
+<p>Office hours: See <a href="https://piazza.com/upenn/spring2014/cis197/staff">Piazza staff page</a></p>
+<h2 id="course-outline">Course Outline</h2>
+<p>Please refer to the syllabus for details. Show this list on slide:</p>
+<ul>
+<li>Language basics &amp; syntax</li>
+<li>Web browsers &amp; the Document Object Model</li>
+<li>Manipulating the DOM with jQuery</li>
+<li>Webkit developer tools &amp; debugging</li>
+<li>Functional programming with Underscore.js</li>
+<li>Client-side MVC with Backbone.js</li>
+<li>Event-driven programming &amp; callbacks</li>
+<li>AJAX requests, application routing</li>
+<li>Web server with Node.js, RESTful applications</li>
+<li>Client app best practices, Backbone extensions</li>
+<li>Debugging performance issues, common problems &amp; solutions</li>
+<li>AngularJS, Ember</li>
+<li><em>Special Topics</em>: web sockets</li>
+<li><em>Special Topics</em>: Compile-to-JS languages (Coffeescript, Typescript)</li>
+<li>Final project workshop</li>
+</ul>
+<h2 id="language-basics">Language Basics</h2>
+<p>See <a href="#js-basics">JS basics module</a>.</p>
+<h2 id="exercises">Exercises</h2>
+<p>Using these basics, can you write out a Fizzbuzz program?</p>
+<p>Solution:</p>
+<pre><code>for (var i = 0; i &lt; 15; i++) {
+  if (i % 3 === 0 &amp;&amp; i % 5 === 0) {
+    console.log(&quot;fizzbuzz\n&quot;);
+  } else if (i % 3 === 0) {
+    console.log(&quot;fizz\n&quot;);
+  } else if (i % 5 === 0) {
+    console.log(&quot;buzz\n&quot;);
+  } else {
+    console.log(i + &quot;\n&quot;);
+  }
+}
+</code></pre><h2 id="homework">Homework</h2>
+<p>Most of your homework will be to get up to speed with the tools you need for
+front end development.</p>
+<p>The first important thing you&#39;re expected to know is <strong>git</strong> version control.
+Using version control allows you to collaborate on software projects and
+participate in the rich open-source community (JS is the most popular language
+on Github!) To boost your git skills, use online resources like:</p>
+<ul>
+<li><a href="http://help.github.com/">Github help</a></li>
+<li><a href="http://try.github.io/">Try Git</a></li>
+<li><a href="http://gitimmersion.com/">Git Immersion</a></li>
+</ul>
+<p>For this class, I also expect a basic to moderate understanding of HTML/CSS. If
+you are lacking in this area, please use online resources like
+<a href="http://codecademy.com">Codecademy</a> and
+<a href="https://developer.mozilla.org/en-US/">Mozilla Developer Network</a>.</p>
+<p>The rest of your homework is as follows:</p>
+<ul>
+<li>Read the <em>entire</em> <a href="https://docs.google.com/document/d/1vd7qfE4TGTG_FW8LIACFIGMcBb1JQwQ0YofMwMyCyjc">syllabus</a>.</li>
+<li>Download Google Chrome (optionally, Chrome Canary).</li>
+<li>Install the latest version of node.js (on OS X, I recommend using Homebrew).</li>
+<li>Set up a Github account &amp; fill out the
+<a href="https://docs.google.com/forms/d/1ldp1D0eU4ZBYM_X12Qyloy_ZPJD9jWv6ClguegiJ5L4/viewform">intro survey</a>.</li>
+<li>Complete the <a href="#github">code submisison tutorial</a>.</li>
+</ul>
+
+      </section>
+      <section class="pure-u-3-4 notes js-basics language-javascript"><h1 id="javascript-basics">JavaScript Basics</h1>
+<p>Reference: <strong><em>Eloquent JavaScript</em></strong> and <strong><em>JavaScript: The Good Parts</em></strong>.</p>
+<h3 id="introduction">Introduction</h3>
+<blockquote>
+<p>JavaScript is a programming language being used to do all sorts of clever and
+horrible things on the web.</p>
+</blockquote>
+<p>-- Marijn Haverbeke, EloquentJS</p>
+<p>It&#39;s the world&#39;s most widely available application runtime. It runs in all
+modern web browsers and is one of the easiest languages to start using since you
+don&#39;t have to download anything. Even if you don&#39;t do much web programming,
+which this course focuses on, I hope I&#39;ll be able to expose you to some
+interesting (or even mind-boggling) programs that influence how you write good
+code in other languages and platforms. The good parts of JS (as Douglas
+Crockford points out) really make it a great functional language -- deep down,
+it actually shares more with Lisp and Scheme than C or Java (even though it
+looks like C or Java on the surface).</p>
+<p>You might have heard a great deal of criticism about JS coming into the course
+(I&#39;m sure I did when I first picked up JS). When you first start writing
+programs, you&#39;ll notice that it&#39;s very liberal in what it allows. However, what
+you type might end up being interpreted very differently from what you imagined.
+Consider this seemingly basic arithmetic with various types:</p>
+<pre><code>1 + &#39;2&#39;        // --&gt; &#39;12&#39;
+[] + 4         // --&gt; &#39;4&#39;
+[] - 4         // --&gt; -4
+{} + 4         // --&gt; &#39;[object Object]4&#39;
+</code></pre><p>Sure, it might seem weird that we&#39;re adding together arrays, objects, and numbers
+(where other languages would throw type errors), but you somewhat get the idea.</p>
+<p>This kind of weak dynamic typing accounts for much of the language&#39;s
+flexibility, but can also be troubling for beginners since the interpreter won&#39;t
+help you identify all errors. On the flip side, it allows for many techniques
+that are impossible in more strict languages. By learning the language properly
+and working with it for a while, I&#39;ve grown to really like JS -- you might too!</p>
+<h3 id="getting-started">Getting Started</h3>
+<p>We&#39;re going to learn JavaScript by reading, writing, and running code. Like
+I said, JavaScript usually runs in a browser, but it also runs on a platform
+called <code>node.js</code>, which is built on Google Chrome&#39;s V8 JavaScript runtime. We&#39;ll
+talk more about <a href="http://nodejs.org/">Node</a> later in the course, but for now I&#39;ll
+just use it as a JS interpreter and runtime to run code snippets.</p>
+<p>You can fire up a REPL (interactive interpreter) simply with the <code>node</code> command.
+If you don&#39;t have Node and want to follow along, you can use
+<a href="http://repl.it/languages/JavaScript">repl.it</a>. (JS code can also be written to
+a <code>.js</code> file and run with <code>node</code>).</p>
+<p>Ready? Let&#39;s start by looking at the different kinds of values in JS.</p>
+<h3 id="values">Values</h3>
+<p><strong>Number</strong>: only one type, written literally.</p>
+<ul>
+<li>Internally, stored as a 64-bit double (like Java <code>double</code>)</li>
+<li><code>NaN</code> represents not a number, where a value did not produce a result</li>
+<li><p><code>Infinity</code> represents all numbers greater than (roughly) <code>1.8e308</code></p>
+<pre><code>  2 + (4 * -3)  // --&gt; -10
+  1.25e4        // --&gt; 12500
+</code></pre></li>
+</ul>
+<p><strong>String</strong>: written with single quotes or double quotes. Use single quotes.</p>
+<ul>
+<li>Escape values with backslash <code>&quot;\n \t \\&quot;</code></li>
+<li>Insert Unicode character codes with <code>\u</code></li>
+<li>Can be compared with <code>&lt;</code>, <code>&gt;</code> (roughly alphabetical)</li>
+<li><p>Strings are immutable, but easy to concatenate with <code>+</code></p>
+<pre><code>  &quot;abc&quot; + &quot;def&quot;         // --&gt; &quot;abcdef&quot;
+  4 + &quot; is a number&quot;    // --&gt; &quot;4 is a number&quot;
+  &quot;abacus&quot; &lt; &quot;aardvark&quot; // --&gt; false
+</code></pre></li>
+<li><p>No <code>char</code> type means you must use a single-char string</p>
+</li>
+<li>Each character is 16 bits wide</li>
+<li>Access length with <code>.length</code> property (there are a few other String methods,
+discussed later)</li>
+</ul>
+<p><strong>Boolean</strong>: <code>true</code>, <code>false</code></p>
+<ul>
+<li><p>Standard operators: <code>&amp;&amp;</code>, <code>||</code>, <code>!</code></p>
+<pre><code>  true &amp;&amp; !false  // --&gt; true
+</code></pre></li>
+</ul>
+<p><em>A note about <em>falsy</em> values</em>: The following values, when evaluated as Booleans,
+are false:</p>
+<ul>
+<li><code>false</code></li>
+<li><code>null</code></li>
+<li><code>undefined</code></li>
+<li>The empty string <code>&#39;&#39;</code></li>
+<li>The number <code>0</code></li>
+<li>The number <code>NaN</code></li>
+</ul>
+<p>All <em>other</em> values, including <code>true</code>, the string <code>&#39;false&#39;</code>, and all objects, are
+<strong><em>truthy</em></strong>. Control flows like this are common:</p>
+<pre><code>var course = {
+  title: &#39;JavaScript&#39;,
+  dept: &#39;CIS&#39;,
+  code: 197
+};
+
+if (course.instructor) {
+  console.log(course.instructor.name);
+} else {
+  console.error(&quot;No instructor found!&quot;);
+}
+</code></pre><p><strong>Object</strong>: curly braces (really convenient literal notation!)</p>
+<ul>
+<li>Lightweight mutable key-value stores</li>
+<li>Like C structs, Python dicts, associative arrays, etc.</li>
+<li><p>Accessed with <code>.propertyName</code> or <code>[&#39;propertyName&#39;]</code> refinement syntax</p>
+<pre><code>  var obj = {
+    number: 1,
+    string: &quot;abcdef&quot;,
+    bool: true,
+    object: { a: 1, b: 2, c: 3 },
+    function: (function () { return 0; })
+  }
+
+  obj.string        // --&gt; &quot;abcdef&quot;
+  obj[&#39;object&#39;].a   // --&gt; 1
+</code></pre></li>
+<li><p>Under the hood, pretty much everything is represented as an object in JS
+(more on this later)</p>
+</li>
+</ul>
+<p><strong>Array</strong>: square brackets literal notation.</p>
+<ul>
+<li>Hash map performance</li>
+<li>Internally represented as objects with numerical property names: <code>arr[0]</code></li>
+<li><p>Convenience methods like <code>.push</code>, <code>.pop</code>, <code>.join</code></p>
+<pre><code>  var a = [ &#39;this&#39;, &#39;is&#39;, &#39;a&#39;, &#39;list&#39;, &#39;of&#39;, &#39;tokens&#39; ]
+
+  a[0]          // --&gt; &#39;this&#39;
+  a.join(&#39; &#39;)   // --&gt; &#39;this is a list of tokens&#39;
+</code></pre></li>
+</ul>
+<p><strong>Function</strong>: <code>function</code> keyword + curly braces contain block of statements.</p>
+<ul>
+<li>First-class JS object (this allows JavaScript to be highly <em>functional</em>)</li>
+<li>&quot;Piece of a program wrapped in a value&quot;</li>
+<li><p>Returns a value provided with <code>return</code> keyword, otherwise <code>undefined</code></p>
+<pre><code>  var square = function (x) {
+    return x * x;
+  }
+
+  Math.square = square;
+
+  console.log(&quot;the square of 4 is &quot; + Math.square(4));
+</code></pre></li>
+</ul>
+<p><strong>Undefined</strong>: void, null, un-assigned-to variables.</p>
+<pre><code>var x;                    // --&gt; undefined
+var f = function () { };
+f();                      // --&gt; undefined
+</code></pre><p>Values are garbage collected by the JS runtime (no <code>malloc</code>, etc. like in C).</p>
+<p>Let&#39;s examine some more language grammar &amp; terminology...</p>
+<h3 id="expressions">Expressions</h3>
+<p><strong>Expressions</strong> are anything that produces a value:</p>
+<ul>
+<li>Literally written values (string, number, built-in)</li>
+<li>Expression within parentheses</li>
+<li>Unary operator applied to one expression (<code>-</code>, <code>!</code>, <code>typeof</code>, ...)</li>
+<li>Binary operator applied (infix) to two expressions (<code>+</code>, <code>*</code>, <code>===</code>, <code>&amp;&amp;</code>, ...)</li>
+<li>Ternary operator applied to three expressions
+(<code>predicate ? valueIfTrue : valueIfFalse</code>)</li>
+<li>Object refinement (using <code>[&#39;propertyName&#39;]</code> or <code>.propertyName</code>)</li>
+<li>Invocation</li>
+</ul>
+<p>Expressions cannot have side effects, meaning they cannot affect state of the
+program or the world. They <em>only</em> produce a value.</p>
+<h3 id="statements">Statements</h3>
+<p>JavaScript programs are built as a list of statements. Each is typically
+terminated by a semicolon <code>;</code> (C-style syntax). You can also sequence
+statements with <code>,</code> but let&#39;s not have any of that in this course.</p>
+<p>Programs are executed sequentially statement-by-statement from top to bottom;
+you can guarantee order of execution.</p>
+<h3 id="programs">Programs</h3>
+<p>A JavaScript file contains a program. You can run multiple files at the same
+time and they will share a common global environment. There is no built-in
+module system in ECMAScript (coming soon in v6), but we will discuss later how
+you can properly organize your code to achieve the kinds of module or package
+systems you might be familiar with from other programming languages.</p>
+<p>In a browser environment, each <code>&lt;script&gt;</code> tag loads a compilation unit and
+executes the contained code immediately. Here we encounter one of the <strong>bad
+parts</strong> of JavaScript: reliance on global variables.</p>
+<p>JavaScript lacks a linker (like <code>C</code>), so when it interprets a compilation unit,
+it throws all variables together into a common global namespace &amp; scope.</p>
+<h3 id="variable-scoping">Variable Scoping</h3>
+<p>We&#39;ve seen a few variables in the above examples; let&#39;s look at them more
+closely. You declare variables simply with the <code>var</code> keyword (look ma, no
+static types!).</p>
+<p>Variables exist in an environment and can one of two scopes:</p>
+<ul>
+<li>Global</li>
+<li>Function</li>
+</ul>
+<p>The rule for distinguishing the two is actually pretty simple: variables
+declared outside of a function definition are <strong>global</strong> while those inside are
+<strong>local</strong>.</p>
+<p>Local variables are created and destroyed every time a function is run (which
+is often just once; we&#39;ll see how this is exploited).</p>
+<p><em>Variables are evaluated as if they were declared at the top of the scope they
+exist in</em>. This is referred to as <strong><em>hoisting</em></strong>. Take a look at this buggy
+program:</p>
+<pre><code>var a = 100;
+show();
+
+function show () {
+  console.log(a);    // --&gt; &quot;undefined&quot;
+
+  if (true) {
+    var a = 123;
+  }
+}
+</code></pre><p>Why does line 5 print &quot;undefined&quot;?</p>
+<p>Before JavaScript executes a function, it looks for all variable declarations
+within the current scope. It then declares all those variables <em>but doesn&#39;t
+assign them</em> (effectively executing the statement <code>var a;</code>). Only then does
+the function block get executed. Assignment of a variable occurs when the
+function execution reaches the line where you actually assign a variable.</p>
+<p>In the example above, <code>a</code> is re-declared as a local variable at the top of the
+<code>show</code> function. So when we try to print out its value with <code>console.log</code>, its
+value is undefined.</p>
+
+      </section>
     </div>
   </body>
   <script type="text/javascript" src="build/javascripts/main-optimized.min.js"></script>
+  <script type="text/javascript" src="build/javascripts/vendor/prism.min.js"></script>
 </html>
