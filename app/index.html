@@ -362,15 +362,6 @@ means), but please make pull requests against the <code>submit</code> branch.</l
       </section>
       <section class="pure-u-3-4 notes lecture1 language-javascript"><h1 id="lecture-1-intro-js-basics">Lecture 1: Intro &amp; JS Basics</h1>
 <p>CIS 197 (January 22, 2013)</p>
-<h2 id="course-description">Course Description</h2>
-<p>This course provides an introduction to modern web development frameworks,
-techniques, and practices used to deliver robust client side applications on
-the web. The emphasis will be on developing JavaScript programs that run in
-the browser, not server-side applications in traditional languages like Java,
-Python, or Ruby.</p>
-<p>This course is most useful for students who have some programming and web
-development experience and want to develop moderate JavaScript skills to be
-able to build complex, interactive applications in the browser.</p>
 <h2 id="intro">Intro</h2>
 <p>As a browser scripting language, one of JavaScript&#39;s main uses is to implement
 view logic -- how a user interface on the web is drawn, manipulated, and
@@ -400,35 +391,6 @@ and there won&#39;t be much mention of the web. As a programming language, JS is
 an implementation of the ECMAScript standard, which makes no reference to web
 technology. We&#39;re currently on v5 of ECMAScript, with v6 expected to be
 a significant expansion to the language due in 2014.</p>
-<p>Before we get into course material, some logistics...</p>
-<h2 id="logistics">Logistics</h2>
-<p>Course meets <strong>Wednesday 1:30pm – 3:00pm</strong> in <strong>Towne 337</strong>.</p>
-<p>Instructor: <strong>Adi Dahiya</strong> <a href="&#x6d;&#x61;&#x69;&#x6c;&#x74;&#111;&#x3a;&#x61;&#100;&#x61;&#x68;&#x69;&#121;&#x61;&#64;&#x73;&#101;&#x61;&#115;">&#x61;&#100;&#x61;&#x68;&#x69;&#121;&#x61;&#64;&#x73;&#101;&#x61;&#115;</a></p>
-<p>TAs:</p>
-<ul>
-<li><strong>Kyle Hardgrave</strong> <a href="&#x6d;&#97;&#x69;&#108;&#x74;&#111;&#58;&#x6b;&#121;&#x6c;&#101;&#x68;&#x40;&#115;&#101;&#97;&#115;">&#x6b;&#121;&#x6c;&#101;&#x68;&#x40;&#115;&#101;&#97;&#115;</a></li>
-<li><strong>Greg Terrono</strong> <a href="&#x6d;&#97;&#105;&#108;&#116;&#x6f;&#58;&#103;&#x74;&#x65;&#x72;&#x72;&#111;&#x6e;&#111;&#64;&#115;&#x65;&#97;&#x73;">&#103;&#x74;&#x65;&#x72;&#x72;&#111;&#x6e;&#111;&#64;&#115;&#x65;&#97;&#x73;</a></li>
-</ul>
-<p>Office hours: See <a href="https://piazza.com/upenn/spring2014/cis197/staff">Piazza staff page</a></p>
-<h2 id="course-outline">Course Outline</h2>
-<p>Please refer to the syllabus for details. Show this list on slide:</p>
-<ul>
-<li>Language basics &amp; syntax</li>
-<li>Web browsers &amp; the Document Object Model</li>
-<li>Manipulating the DOM with jQuery</li>
-<li>Webkit developer tools &amp; debugging</li>
-<li>Functional programming with Underscore.js</li>
-<li>Client-side MVC with Backbone.js</li>
-<li>Event-driven programming &amp; callbacks</li>
-<li>AJAX requests, application routing</li>
-<li>Web server with Node.js, RESTful applications</li>
-<li>Client app best practices, Backbone extensions</li>
-<li>Debugging performance issues, common problems &amp; solutions</li>
-<li>AngularJS, Ember</li>
-<li><em>Special Topics</em>: web sockets</li>
-<li><em>Special Topics</em>: Compile-to-JS languages (Coffeescript, Typescript)</li>
-<li>Final project workshop</li>
-</ul>
 <h2 id="language-basics">Language Basics</h2>
 <p>See <a href="#js-basics">JS basics module</a>.</p>
 <h2 id="exercises">Exercises</h2>
@@ -456,6 +418,7 @@ on Github!) To boost your git skills, use online resources like:</p>
 <li><a href="http://help.github.com/">Github help</a></li>
 <li><a href="http://try.github.io/">Try Git</a></li>
 <li><a href="http://gitimmersion.com/">Git Immersion</a></li>
+<li><a href="http://marklodato.github.io/visual-git-guide/index-en.html">A Visual Git Reference</a></li>
 </ul>
 <p>For this class, I also expect a basic to moderate understanding of HTML/CSS. If
 you are lacking in this area, please use online resources like
@@ -474,6 +437,7 @@ you are lacking in this area, please use online resources like
       </section>
       <section class="pure-u-3-4 notes js-basics language-javascript"><h1 id="javascript-basics">JavaScript Basics</h1>
 <p>Reference: <strong><em>Eloquent JavaScript</em></strong> and <strong><em>JavaScript: The Good Parts</em></strong>.</p>
+<p><a href="#lecture1">&larr; Back to Lecture 1</a></p>
 <h3 id="introduction">Introduction</h3>
 <blockquote>
 <p>JavaScript is a programming language being used to do all sorts of clever and
@@ -514,7 +478,9 @@ just use it as a JS interpreter and runtime to run code snippets.</p>
 <p>You can fire up a REPL (interactive interpreter) simply with the <code>node</code> command.
 If you don&#39;t have Node and want to follow along, you can use
 <a href="http://repl.it/languages/JavaScript">repl.it</a>. (JS code can also be written to
-a <code>.js</code> file and run with <code>node</code>).</p>
+a <code>.js</code> file and run with <code>node</code>). Alternatively, you can simply open up the
+console in your web browser and type expressions:</p>
+<p><img src="build/images/browser-console.png" alt="browser-console"></p>
 <p>Ready? Let&#39;s start by looking at the different kinds of values in JS.</p>
 <h3 id="values">Values</h3>
 <p><strong>Number</strong>: only one type, written literally.</p>
