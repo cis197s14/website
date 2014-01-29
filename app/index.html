@@ -106,19 +106,17 @@ available in April.</p>
             <tr>
               <td>2</td>
               <td>1/29</td>
-              <td>
-                JS functions & objects <br/>
-                How do web browsers work?
-              </td>
-              <td>Eloquent JS, Chapters 3, 4</td>
+              <td><a href="#js-functions">JS functions</a></td>
+              <td>Eloquent JS, Chapters 3</td>
               <td></td>
             </tr>
             <tr>
               <td>3</td>
               <td>2/5</td>
               <td>
+                JS objects & inheritance <br/>
                 Document Object Model <br/>
-                Manipulating the DOM with jQuery
+                jQuery Basics
               </td>
               <td>Eloquent JS, Chapter 12</td>
               <td></td>
@@ -269,8 +267,7 @@ saying you have been added to the <strong>cis197s14</strong> organization, you m
 with the next steps.</p>
 </li>
 <li><p>Log onto Github. Change your view to the CIS 197 class context.
-<img src="build/images/github/context.png" alt="switch
-context"></p>
+<img src="build/images/github/context.png" alt="switch context"></p>
 </li>
 <li><p>Click on the repository we&#39;ve created for your homework. The name will be in
 the format <strong>&quot;hw_pennkey&quot;</strong>. Note this repository is private; only you and
@@ -657,6 +654,160 @@ function execution reaches the line where you actually assign a variable.</p>
 <p>In the example above, <code>a</code> is re-declared as a local variable at the top of the
 <code>show</code> function. So when we try to print out its value with <code>console.log</code>, its
 value is undefined.</p>
+
+      </section>
+      <section class="pure-u-3-4 notes js-functions language-javascript"><h1 id="javascript-functions">JavaScript Functions</h1>
+<p>Reference: <strong><em>Eloquent JavaScript</em></strong> and <strong><em>JavaScript: The Good Parts</em></strong>.</p>
+<hr>
+<blockquote>
+<p>Generally, the craft of programming is the factoring of a set of requirements
+into a set of functions and data structures.</p>
+</blockquote>
+<p>-- Douglas Crockford (<em>JS: The Good Parts</em>)</p>
+<p>I won&#39;t too talk about the data structures, but let&#39;s examine the basics of what
+a <em>function</em> does in a programming language. Functions embody the logic of your
+application.</p>
+<p>Pure functions have no side effects -- they don&#39;t affect the state of the world.
+They are easy to use and reason about since they require no context, and they
+are also more widely applicable to solving problems through code. However, they
+do not solve all the possible problems you might come across when developing
+software. I did say, of course, that JS is mainly used for view logic on the
+web; if we can&#39;t manipulate the state of a web page, then what good is our
+program?</p>
+<p>This next bit of advice applies to nearly all programming languages: if
+a function seems simple enough that it can be written <em>purely</em>, then do so. In
+terms of programming language theory, JavaScript borrows a lot from functional
+languages, so it would be wise (and more natural to the language) to remain
+thinking functionally, trying to keep as much of the impure application logic
+contained to a few modules.</p>
+<p>One more thing: like I said earlier, nearly everything in JS is an object, and 
+that includes functions as well. They have a few special things about them,
+including invocation capabilities. We&#39;ll cover more of the nuances of the
+function object later.</p>
+<h3 id="invocation">Invocation</h3>
+<p>In addition to its arguments (which are <em>immediately</em> defined as variables),
+a function receives two extra special variables in its context: <code>this</code> and
+<code>arguments</code>.</p>
+<p><code>this</code> refers to the containing scope or context of a function invocation:</p>
+<p><strong>Method Invocation</strong>: when invoked as a property of an object, a function&#39;s
+containing object is its context.</p>
+<pre><code>var myObject = {
+  value: 0,
+  increment: function (inc) {
+    inc = inc ? inc : 1;
+    this.value += inc;
+  }
+}
+
+myObject.increment();
+myObject.increment(50);
+console.log(myObject.value);  // --&gt; 51
+</code></pre><p><strong>Function Invocation</strong>: functions not invoked as an object property are
+attached to the global object; this is somewhat of a flaw in JavaScript&#39;s
+design. This flaw is best demonstrated by example.</p>
+<p>Let&#39;s say I wanted to augment <code>myObject</code> with a <code>double</code> method
+which doubles the contained <code>value</code> property. And maybe I&#39;d like to use a
+helper function to encode this logic, like so:</p>
+<pre><code>myObject.double = function () {
+  var helper = function () {
+    this.value = this.value * 2;
+  };
+
+  helper();
+};
+
+myObject.double();
+console.log(myObject.value);  // --&gt; 51
+</code></pre><p>But this doesn&#39;t work! <code>myObject.value</code> has not been doubled; <em>function
+invocation</em> is the reason why. Even though the <code>helper</code> function is being
+defined within a method of <code>myObject</code>, it gets executed in the global context.
+As a result, <code>this</code> within <code>helper</code> references the global context (where the 
+<code>value</code> property is meaningless).</p>
+<p>The solution ends up being a strange construction like the following.
+Functions don&#39;t retain a reference to their parent <code>this</code>, so we must manually
+keep a reference, usually called <code>that</code>:</p>
+<pre><code>myObject.double = function () {
+  var that = this;
+
+  var helper = function () {
+    that.value = that.value * 2;
+  };
+
+  helper();
+};
+
+myObject.double();
+console.log(myObject.value);  // --&gt; 102
+</code></pre><p><strong>Constructor Invocation</strong>: when a function invocation is proceeded by the <code>new</code>
+keyword, a new object is created and the function&#39;s <code>this</code> scope is bound to
+that new object. This is strongly tied to prototypical inheritance, which is
+covered in the notes on <strong>objects</strong>.</p>
+<p><strong>Apply Invocation</strong>: because they&#39;re just objects, functions can have their own
+methods as well (crazy, I know). One in particular that&#39;s useful is the <code>.apply</code>
+method, which allows you to specify a <code>this</code> context and <code>arguments</code> list.</p>
+<pre><code>var anotherObject = {
+  value: -10
+}
+
+myObject.increment.apply(anotherObject, [5]);
+
+console.log(anotherObject.value)  // --&gt; -5
+</code></pre><p><em>Related</em>: <strong>Call Invocation</strong>: works almost the same as the <code>.apply</code> method, but
+instead of using an array, you pass arguments directly:</p>
+<pre><code>myObject.increment.call(anotherObject, 5);
+</code></pre><h3 id="closures">Closures</h3>
+<p>Because of the limited types of variable scoping available in JS, hiding private
+variables might seem difficult at first. But as as is often the case in the
+language, the incredible flexibility of functions comes to the rescue.</p>
+<p>A <strong>closure</strong> in JavaScript is a function that, when invoked, is able to use
+variables not available in the current scope -- they were stored in the closure
+by the function that generated it. Here&#39;s a simple example.</p>
+<pre><code>var genClosure = function () {
+  var privateUser = {
+    firstName: &#39;Adi&#39;
+  , lastName: &#39;Dahiya&#39;
+  };
+
+  var printName = function () {
+    console.log(privateUser.firstName + &#39; &#39; + privateUser.lastName);
+  };
+
+  return printName;
+}
+
+console.log(genClosure());    // --&gt; &#39;Adi Dahiya&#39;
+</code></pre><p>Here, the global environment doesn&#39;t have access to the <code>privateUser</code> variable,
+but the function returned from <code>genClosure</code> is still able to access it. You&#39;ll
+see this immediately in any code intended for execution in Node: it will be
+wrapped in an <strong>Immediately-Invoked Function Expression</strong> (IIFE).</p>
+<h3 id="iife">IIFE</h3>
+<p>We know by now that global variables in JavaScript are a <em>Bad Thing</em>. Luckily,
+JS programmers have developed a pattern to mitigate this concern. An
+immediately-invoked function expression is an anonymous function used at the top
+level of a JS program to <em>provide a lexical scope for just that file / module</em>.
+It looks like this:</p>
+<pre><code>(function () {
+
+  var Person = function () { ... };
+  Person.prototype.getDescription = function () { ... };
+  ...
+
+  module.exports = {
+    Person: Person,
+    ...
+  };
+
+})();
+</code></pre><p>What we&#39;ve done here is define an anonymous function and immediately invoked it
+so that the contained code is run immediately when the file is loaded. The use
+of a function makes any an all <code>var</code> declarations scoped to the anonymous
+function, <em>not the global context</em>.</p>
+<p>Note the exports exposed by this module at the end of the IIFE. <em>This is an
+instance of a closure!</em>. When another file (or the Node interpreter) imports
+this module, it can use any properties or functions from the <code>exports</code> object,
+but it can&#39;t access the rest of the variables in the IIFE scope. Specifically,
+this example uses <strong>AMD</strong> (asynchronous module definition) syntax, which is the
+standard in Node.js.</p>
 
       </section>
     </div>
