@@ -60,15 +60,12 @@ module.exports = (grunt) ->
         src: ['*.scss']
         dest: 'app/assets/css/'
         ext: '.css'
-      # build:
-      #   files:
-      #     'app/assets/css/main.css': 'src/scss/main.scss'
 
     # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
     watch:
       templates:
-        files: ['src/templates/*.jade']
+        files: ['src/templates/**/*.jade']
         tasks: ['jade']
 
       coffee:
