@@ -121,9 +121,8 @@ available in April.</p>
               <td>3</td>
               <td>2/5</td>
               <td>
-                JS objects & inheritance <br/>
-                Document Object Model <br/>
-                Browser Events
+                <a href="#objects">JS objects & inheritance</a> <br/>
+                <a href="#browsers">JS in browsers</a>
               </td>
               <td>
                 <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Introduction_to_Object-Oriented_JavaScript">
@@ -893,6 +892,566 @@ avoid those as well. Don&#39;t use the <code>Function</code> constructor or pass
 <a href="https://github.com/rwaldron/idiomatic.js/">idiomatic.js</a>.</em></strong> (I generally
 agree with most of the conventions used there).</p>
 
+      </section>
+      <section class="pure-u-3-4 notes objects language-javascript"><h1 id="javascript-objects">JavaScript Objects</h1>
+<p>Reference: <strong><em>Eloquent JavaScript</em></strong> and <strong><em>JavaScript: The Good Parts</em></strong>.</p>
+<hr>
+<p>Objects are the building block of any consequential JS program -- you&#39;ll need to
+understand them intimately to write good code. All JS values that are not simple
+types (numbers, strings, booleans, undefined) are objects.</p>
+<p>There are no classes or static types in JS, so there are very few constraints on
+property names and values. Objects can contain other objects, so you can easily
+represent trees or graphs.</p>
+<p>There is one slightly tricky feature of objects, and that is prototypical
+inheritance. As the name suggests, it&#39;s similar to class-based (or classical)
+inheritance. (More on this later).</p>
+<p>As we&#39;ve seen, there&#39;s a convenient literal notation for objects:</p>
+<pre><code>var flight = {
+  airline: &quot;Oceanic&quot;,
+  number: 815,
+  departure: {
+    IATA: &quot;SYD&quot;,
+    time: &quot;2004-09-22 14:55&quot;,
+    city: &quot;Sydney&quot;,
+    &quot;gate-number&quot;: 17
+  },
+  arrival: {
+    IATA: &quot;LAX&quot;,
+    time: &quot;2004-09-23 10:42&quot;,
+    city: &quot;Los Angeles&quot;,
+    &quot;gate-number&quot;: &quot;46A&quot;
+  },
+};
+</code></pre><p>When a property name is not a legal JS name (contains dashes or is a reserved
+word), it requires quotes (like <code>&quot;gate-number&quot;</code> above). Similarly, in retrieval,
+you must sometimes use the brackets refinement syntax (less preferred than the
+<code>.</code> refinement syntax):</p>
+<pre><code>var prop = &quot;gate-number&quot;;
+
+flight.departure.city               // &quot;Sydney&quot;
+flight.departure[&quot;gate-number&quot;]     // 17
+flight.arrival[prop]                // &quot;46A&quot;
+</code></pre><p>Attempts to access an undefined property will give you, as you might expect,
+<code>undefined</code>. If you try to further access a property within this undefined
+property, JavaScript will throw a (strangely-named) <code>TypeError</code>.</p>
+<pre><code>flight.equipment        // undefined
+flight.equipment.model  // TypeError: Cannot read property &#39;model&#39; of undefined
+</code></pre><p>Property updates work just like variable assignment. Objects are always passed
+around by reference; they are never copied (you might write a function to do
+this manually).</p>
+<p>The <code>delete</code> keyword removes a property from an object without touching anything
+on the prototype chain:</p>
+<pre><code>delete flight.number
+</code></pre><h3 id="uses-patterns">Uses / Patterns</h3>
+<p>The simplicity of objects means that they are widely used in various situations
+to manage data.</p>
+<ul>
+<li><p>When an function takes in many arguments, it can be tricky to remember their
+exact ordering, especially since there are no static types. Instead of a long
+list of arguments, pass in a single object containing all the necessary data:</p>
+<pre><code>var courseModel = mkCourse(&#39;JavaScript&#39;, &#39;CIS&#39;, 197, instructor, 20);
+
+var courseModel = mkCourse({
+name: &#39;JavaScript&#39;,
+  dept: &#39;CIS&#39;,
+  code: 197,
+  instructor: instructor,
+  enrollment: 20
+});
+</code></pre></li>
+<li><p>JavaScript Object Notation (JSON) is a lightweight data format used
+universally in web programming these days (it&#39;s cleaner / more lightweight
+than SOAP, XML, etc.).  JSON allows a subset of the object syntax used in
+JavaScript. That is to say, all JSON data is a valid JS object, but not all
+JS objects are valid JSON. It&#39;s common to fetch JSON data with an AJAX request
+and use it in a client-side application like so:</p>
+<pre><code>var courseData = $.get(&#39;http://www.penncoursereview.com/CIS/197&#39;);
+
+console.log(courseData);    // { name: &#39;JavaScript&#39;, dept: &#39;CIS&#39;, ... }
+</code></pre></li>
+<li><p>Arrays are actually just objects with some syntactic sugar and extra methods.
+They look like this:</p>
+<pre><code>var a = [ &#39;a&#39;, &#39;b&#39;, &#39;c&#39; ];
+
+{
+  0: &#39;a&#39;,
+  1: &#39;b&#39;,
+  2: &#39;c&#39;
+}
+</code></pre><p>So when you&#39;re using an Array, you&#39;re really using an object. Keep this in
+mind when thinking about prototypes and inheritance.</p>
+</li>
+<li><p><em>Global abatement</em>. When you consider the problems associated with global
+scoping of variables in JS, you might be thinking -- how do I share
+application state across all my files if I want to avoid global variables?
+It&#39;s fairly accepted practice to create a <em>single</em> global object variable that
+you share between files and which maintains this state. It&#39;s kind of like
+namespacing:</p>
+<pre><code>// Globals!
+MY_APP = {
+  appId: &#39;asdf43f349hukjasdf9843&#39;,
+  appSecret: &#39;shhh&#39;
+};
+</code></pre></li>
+</ul>
+<h3 id="prototypical-inheritance">Prototypical Inheritance</h3>
+<p>All objects are linked to their <em>prototype</em>, an object from which they can
+inherit properties. Those created as object literals are linked to
+<code>Object.prototype</code> (built into the language).</p>
+<p>When you attempt to retrieve an object property, JS will walk up the prototype
+chain until it finds a matching property name (known as <em>delegation</em>).</p>
+<p>Prototypes are <strong>dynamic</strong>: changing or adding a property on one will make it
+immediately available to all objects that are linked to it.</p>
+<ul>
+<li>The Array methods you access when dealing with arrays (like <code>join</code>, <code>push</code>,
+<code>pop</code>) are stored in the global <code>Array.prototype</code> rather than every instance
+of an Array.</li>
+<li><p>You can do some powerful things by updating a built-in prototype...</p>
+<pre><code>var a = [ &#39;a&#39;, &#39;list&#39;, &#39;of&#39;, &#39;tokens&#39; ]
+  , b = [ &#39;this&#39;, &#39;is&#39; ];
+
+// Concatenates another array to the end of this one. Although this method
+// is defined after a and b are initialized, they &quot;inherit&quot; the method.
+Array.prototype.concat = function (other) {
+  this.push.apply(this, other);
+};
+
+b.concat(a);
+console.log(b.join(&#39; &#39;));     // --&gt; &#39;this is a list of tokens&#39;
+</code></pre></li>
+</ul>
+<p>(<em>Note</em>: in hindsight, there&#39;s actually a built-in method called
+  <code>Array.prototype.concat</code> already. So you wouldn&#39;t want to overwrite it like
+  this.)</p>
+<ul>
+<li><p>And also some dangerous things! Let&#39;s say we wanted to swap the names of <code>pop</code>
+and <code>shift</code>, which remove an element from the tail and head of an Array,
+respectively:</p>
+<pre><code>var old_pop = Array.prototype.pop;
+
+Array.prototype.pop = Array.prototype.shift;
+Array.prototype.shift = old_prop;
+</code></pre><p>With this last bit of code, if you loaded anyone else&#39;s JS code (like the
+jQuery library, etc.), any code that relies on <code>Array.prototype.pop</code> or
+<code>Array.prototype.shift</code> wouldn&#39;t work properly. <strong>Lesson</strong>: be careful with
+global prototypes.</p>
+</li>
+</ul>
+<p><strong><em>Keep in mind</em></strong>: The delegation of properties sometimes creates problems
+when you are only concerned with the immediate object in question (for
+reflection or enumeration). In this case, it&#39;s helpful to use the
+<code>hasOwnProperty</code> function available to all objects:</p>
+<pre><code>for (prop in flight) {
+  if (flight.hasOwnProperty(prop)) {
+    console.log(prop + &quot;: &quot; + flight[prop]);
+  }
+}
+</code></pre><p>There&#39;s actually another way to solve this problem by being more specific about
+what type of property you are defining. The <code>Object.defineProperty</code> method lets
+you set a property on an object and <em>configure</em> it with a few parameters,
+including whether the property is enumerable, writable, etc. See
+<a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/defineProperty">its documentation</a>.</p>
+<pre><code>Object.defineProperty(flight, &#39;toString&#39;, {
+  enumerable: false,
+  value: function () { ... },
+  writable: false
+});
+</code></pre><p><em>Note</em>: you are not guaranteed the order of properties with a <code>for in</code> loop on
+objects. If you are really concerned with enumerating the properties in order,
+it&#39;s best to list them out manually in an array:</p>
+<pre><code>var categories = [
+      &#39;cold&#39;
+, &#39;hot&#39;
+    , &#39;espresso&#39;
+    ]
+, coffeeProducts = {
+      cold: [ &#39;iced&#39;, &#39;cold brew&#39; ]
+, hot: [ &#39;pour over&#39;, &#39;french press&#39;, &#39;drip&#39; ]
+    , espresso: [ &#39;americano&#39;, &#39;macchiato&#39;, &#39;shot&#39; ]
+    };
+
+for (var i = 0; l = categories.length; i &lt; l; i++) {
+  var prop = categories[i];
+  console.log(coffeeProducts[prop]);
+}
+</code></pre><h3 id="pseudo-classes">Pseudo-classes</h3>
+<p>JavaScript is slightly conflicted about the nature of its inheritance, so its
+constructor syntax makes it seem somewhat classical. You will see many objects
+created with the <code>new</code> keyword:</p>
+<pre><code>var a = new Array(16);
+
+var americano = new Coffee({
+  type: &#39;espresso&#39;
+, variations: [ &#39;hot&#39;, &#39;iced&#39; ]
+, preparation: &#39;Pull two espresso shots and pour them into a mug of water...&#39;
+};
+</code></pre><p>The <code>new</code> keyword essentially tells the runtime to <strong>invoke the <code>constructor</code>
+method from a function&#39;s prototype</strong>.</p>
+<p>Before we further inspect how constructors work, let&#39;s consider what happens in
+the JS runtime when a function is created (they&#39;re objects too, after all).</p>
+<p>When <strong>a function object is created</strong>, the internal <code>Function</code> constructor that
+produces the function object runs some code like this:</p>
+<pre><code>this.prototype = { constructor: this }
+</code></pre><p>This behavior seems somewhat strange. Why do we need regular ol&#39; functions to
+have constructors associated with them? Only those functions that actually
+construct class-like objects should behave like this, right? Here we encounter
+one of the flaws in the way JS does inheritance. <em>JavaScript doesn&#39;t
+discriminate whether functions are meant to be constructors</em>. This means that
+you as a programmer ought to demarcate constructors yourself through naming
+conventions (capitalize the first letter of the function name).</p>
+<p>When JS runs a line of code invoking the <code>new</code> keyword, some additional code
+gets run after <code>this.prototype = { constructor: this }</code>. Note that <code>this</code>
+represents the constructor function being invoked):</p>
+<pre><code>var that = Object.create(this.prototype),
+    other = this.apply(that, arguments);
+
+if (typeof other === &#39;object&#39; &amp;&amp; other !== null) {
+  return other;
+} else {
+  return that;
+}
+</code></pre><p>The method <code>Object.create</code> (see
+<a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/create">documentation</a>)
+simply creates a new empty object with its <code>prototype</code> set to a provided value.
+Then the constructor function is applied to the new object with proper arguments
+forwarded. If the constructor returned a value, that value is returned as the
+newly constructed object. Otherwise, the new object from <code>Object.create</code> is
+returned.</p>
+<p>Knowing this, we can write some pseudoclassical code like this:</p>
+<pre><code>var Person = function (first, last, email) {
+  this.firstName = first;
+  this.lastName = last;
+  this.email = email;
+};
+
+Person.prototype.getName = function () {
+  return this.firstName + &quot; &quot; + this.lastName;
+};
+
+Person.prototype.getEmail = function () {
+  return this.email;
+};
+</code></pre><p>The <code>Person.prototype</code> object now looks something like a class definition:</p>
+<pre><code>{
+  constructor: function (first, last, email) { ... },
+  getName: function () { ... },
+  getEmail: function () { ... }
+}
+</code></pre><p>A <code>Person</code> object would behave like so:</p>
+<pre><code>var adi = new Person(&#39;Adi&#39;, &#39;Dahiya&#39;, &#39;adahiya@seas.upenn.edu&#39;);
+console.log(adi.getName());       // --&gt; &quot;Adi Dahiya&quot;
+</code></pre><p>And let&#39;s say we wanted to inherit from this <code>Person</code> &quot;class&quot;:</p>
+<pre><code>var Instructor = function (first, last, email, course) {
+  this.firstName = first;
+  this.lastName = last;
+  this.email = email;
+  this.course = course;
+};
+
+Instructor.prototype = new Person();
+
+Instructor.prototype.getDescription = function () {
+  var name = this.getName();
+  return name + &quot; teaches &quot; + this.course;
+};
+
+var adi = new Instructor(&#39;Adi&#39;, &#39;Dahiya&#39;, &#39;adahiya@seas.upenn.edu&#39;, &#39;CIS 197&#39;);
+console.log(adi.getDescription());  // --&gt; &quot;Adi Dahiya teaches CIS 197&quot;
+</code></pre><p>A couple things to note:</p>
+<ul>
+<li>The <code>Instructor</code> constructor has to re-do the work of the <code>Person</code>
+constructor. Can you think of a way we can reuse the logic in <code>Person()</code> with
+some clever function application?</li>
+<li>I didn&#39;t set <code>Instructor.prototype = Person.prototype</code>. This would
+have allowed <code>Instructor</code> access to the <code>Person</code> methods, but it would have
+also made it a two-way relationship, where any methods added to
+<code>Instructor.prototype</code> are also available to all <code>Person</code> instances, which we
+<em>don&#39;t</em> want. By instantiating a new <code>Person</code> object, we get the benefits of
+its prototype while maintaining separation.</li>
+</ul>
+<hr>
+<p>We seem to be getting somewhere now! This behavior looks kinda object-oriented,
+doesn&#39;t it? But there are some wonky things going on.</p>
+<ul>
+<li>The inheritance and &quot;class&quot; definition syntax looks weird because of the use
+of <code>prototype</code> everywhere.</li>
+<li>All properties are public.</li>
+<li>You can&#39;t access the <code>super</code> method.</li>
+</ul>
+<p>Also, as I indicated above, there is some danger in defining a constructor like
+this. What would happen if you forgot the <code>new</code> keyword when trying to use
+a constructor? (hint: how are functions regularly invoked?)</p>
+<p>Again, this design flaw in JavaScript is mitigated by capitalizing the first
+letter of constructor functions. The hope is that a programmer reading the code
+can easily identify missing <code>new</code> keywords.</p>
+<p>As for the flaws mentioned above:</p>
+<ul>
+<li>There are limited alternatives for object-oriented programming that do not use
+the <code>prototype</code> syntax like this. Compile-to-JS languages (which we may cover
+later in the course) provide some great syntactic sugar that abstracts away
+this kind of low-level class definition.</li>
+<li>Use closures in your JS modules to maintain private variables.</li>
+<li>If you set up the classes right, you can use something like
+<code>Person.prototype.getName(...)</code> to access &quot;super&quot; methods.</li>
+</ul>
+<h3 id="object-create">Object.create</h3>
+<p>In ES5 (the current JS standard), there was a new method introduced called
+<code>Object.create</code>, which provides some simple syntax for <strong>differential
+inheritance</strong>. Its first argument is the prototype of the object you want to
+inherit from (or <code>null</code>), and the second (optional) argument is map of
+properties you want to set on the new object.</p>
+<p>Another way to express the above <code>Instructor</code> class using <code>Object.create</code>:</p>
+<pre><code>var Instructor = function (first, last, email, course) {
+  Person.apply(this, arguments);
+  this.course = course;
+};
+
+Instructor.prototype = Object.create(Person.prototype);
+
+Instructor.prototype.getDescription = function () {
+  var name = this.getName();
+  return name + &quot; teaches &quot; + this.course;
+};
+</code></pre><p>This accomplishes the earlier goal of separating <code>Instructor</code> and <code>Person</code>&#39;s
+prototype (there&#39;s a level of indirection since <code>Object.create</code> produces a new
+object) while also invoking the <code>super</code> constructor.</p>
+<p>Both this and the above method (in the section &quot;Pseudo-classes&quot;) for
+object-oriented programming in JavaScript are acceptable. The <code>Object.create</code>
+method slightly reduces the number of lookups on the prototype chain when
+invoking &quot;class&quot; methods.</p>
+<hr>
+<p><strong>Here&#39;s a real world example</strong> of inheritance from the
+<a href="https://github.com/cis197s14/website/blob/master/app/assets/javascripts/main.js">source code</a>
+for the CIS 197 website. Note that the actual code in the repository is compiled
+from Coffeescript, not hand-written (but you&#39;ll notice the compiler produces
+very readable code!).</p>
+<pre><code>/*
+* Manages state of the section-navigation functionality in the sidebar.
+*/
+var SectionNav = (function () {
+
+  SectionNav.ACTIVE_CLASS = &#39;active&#39;;   // why can we do this up here?
+
+  function SectionNav (target) {
+    this.selected = &#39;&#39;;
+    this.target = target;
+    this.sections = this.target.children(&#39;section&#39;);
+    ...
+  };
+
+  SectionNav.prototype.navigateTo = function (sectionName) {
+    this.sections.removeClass(SectionNav.ACTIVE_CLASS);
+    this.target.children(&quot;.&quot; + sectionName).addClass(SectionNav.ACTIVE_CLASS);
+
+    this.nav.children().removeClass(SectionNav.ACTIVE_CLASS);
+    this.nav.find(&quot;.&quot; + sectionName).addClass(SectionNav.ACTIVE_CLASS);
+    this.selected = sectionName;
+  }
+
+  ...
+
+  return SectionNav;
+
+})();
+</code></pre>
+      </section>
+      <section class="pure-u-3-4 notes browsers language-javascript language-html"><h1 id="javascript-in-the-browser">JavaScript in the browser</h1>
+<p>Reference: <strong><em>Eloquent JavaScript</em></strong> &amp; <strong><em>Mozilla Developer Network</em></strong>.</p>
+<hr>
+<blockquote>
+<p>The browser is a really hostile programming environment.</p>
+</blockquote>
+<p>-- Douglas Crockford, <em>The JavaScript Programming Language</em> (video lecture)</p>
+<p>The web browser is actually a great place that&#39;s experienced a huge deal of
+development in the past few years (again, this is correlated with an influx of
+front end dev tooling). But this quote does have a nugget of truth to it, as
+you&#39;ll experience yourself in writing JS for the browser.</p>
+<p>The reason that web APIs and browsers have been able to advance quickly is that
+their development has been relatively decentralized. There is a standardizing
+body, but there is no central authority developing browsers and implementing
+language features. Various browser vendors (Google, Mozilla, Microsoft, etc.)
+have implemented features at different rates and this has made cross-browser
+support somewhat haphazard.</p>
+<h2 id="what-is-a-browser-">What is a browser?</h2>
+<p>A web browser has two main components that allow you to view and interact with
+web pages:</p>
+<ul>
+<li><strong>JavaScript engine</strong>: loads &amp; interprets JavaScript source code in
+a sandboxed runtime. Can also implement extensions to the language.</li>
+<li><strong>Rendering engine</strong> (or layout engine, or simply browser engine): formats
+information on the page after parsing HTML &amp; CSS.</li>
+</ul>
+<p>Here are the major <a href="http://en.wikipedia.org/wiki/JavaScript_engine">JS engines</a>
+and <a href="http://en.wikipedia.org/wiki/Comparison_of_web_browser_engines">rendering engines</a>, 
+respectively:</p>
+<ul>
+<li><strong>v8</strong> + <strong>Blink</strong> (Google Chrome)</li>
+<li><strong>SpiderMonkey / Rhino</strong>  + <strong>Gecko</strong> (Mozilla Firefox)</li>
+<li><strong>Nitro</strong> + <strong>WebKit</strong> (Apple Safari)</li>
+<li><strong>Chakra</strong> + <strong>Trident</strong> (Internet Explorer)</li>
+</ul>
+<p>There are even sometimes differences in the core JavaScript runtime across
+browsers. For example, IE&#39;s runtime is known to have a memory leak when
+a circular reference is retained between a user-created object and a built-in
+object (such as a DOM reference).</p>
+<p>Most of the development in these engines has been concerning performance.
+Mozilla, generally the leader in cutting-edge JS research, has released JS
+engines fast enough to run
+<a href="https://blog.mozilla.org/blog/2013/03/27/mozilla-is-unlocking-the-power-of-the-web-as-a-platform-for-gaming/">3D games like Quake at 60fps in the browser</a>.</p>
+<h3 id="a-bit-of-syntax">A bit of syntax</h3>
+<p>Before going further, let&#39;s recall what a basic HTML document looks like:</p>
+<pre><code>&lt;!doctype html&gt;
+&lt;html&gt;
+  &lt;head&gt;
+    &lt;title&gt;CIS 197 JavaScript&lt;/title&gt;
+  &lt;/head&gt;
+  &lt;body&gt;
+    &lt;h1&gt;Welcome to CIS 197&lt;/h1&gt;
+    &lt;p&gt;
+      This is a course about ...
+    &lt;/p&gt;
+  &lt;/body&gt;
+&lt;/html&gt;
+</code></pre><p>In my examples, I&#39;ll usually eschew the <code>&lt;doctype&gt;</code>, <code>&lt;html&gt;</code>, <code>&lt;body&gt;</code>, etc.
+tags and write a simplified version of the page.</p>
+<h2 id="loading-javascript-in-the-browser">Loading JavaScript in the browser</h2>
+<p>Well, we&#39;re not quite at the level of developing browser games right now. Let&#39;s
+first understand how JS is loaded in the browser environment.</p>
+<p>Web browser programs differ fundamentally from most other programs you are used
+to writing in some key ways that have nothing to do with the JavaScript
+language. First off, think about what you&#39;re actually doing when you download
+JavaScript from the Internet to your web browser and executing it -- you&#39;re
+trusting source code from a huge number of websites of varying degrees of
+well-meaning to run on your computer. Sounds dangerous, doesn&#39;t it?</p>
+<p>But we all get off just fine on the web, don&#39;t we? This is largely due to a neat
+little concept called <strong><em>sandboxing</em></strong>. Browsers severely limit the scope of
+capabilities that a JavaScript program can act on. It can&#39;t look at the files on
+your computer, modify things outside of the web page it&#39;s embedded in, or
+contact servers other than the one which served its web page.</p>
+<hr>
+<p>Just like in a Node.js runtime, JS is executed in a global context, except this
+time it&#39;s called <code>window</code>. It represents the current session in your browser
+tab, which is cleared with every page refresh. That means your browser requests
+new JS files and starts up a new global context when you switch or reload pages.</p>
+<p>There are a few ways to invoke JS in an HTML page:</p>
+<ul>
+<li><p>Inline <code>&lt;script&gt;</code> tag</p>
+<pre><code>&lt;head&gt;
+  &lt;title&gt;...&lt;/title&gt;
+  &lt;script&gt;
+    alert(&quot;foo&quot;);
+  &lt;/script&gt;
+&lt;/head&gt;
+</code></pre></li>
+<li><p>Linked <code>&lt;script&gt;</code> tag</p>
+<pre><code>&lt;head&gt;
+  &lt;title&gt;...&lt;/title&gt;
+  &lt;script type=&quot;text/javascript&quot; src=&quot;scripts/foo.js&quot;&gt;&lt;/script&gt;
+&lt;/head&gt;
+</code></pre></li>
+<li><p>Attached as an event handler to a DOM element</p>
+<pre><code>&lt;button class=&quot;submit&quot; onclick=&quot;myApp.submitFormAsync();&quot;&gt;
+  Submit
+&lt;/button&gt;
+</code></pre></li>
+</ul>
+<p>The first two methods result in the JS code being parsed &amp; run immediately as
+the browser engine encounters it (while parsing the HTML document), while the
+last (as indicated) runs some bit of JS code as an event callback.</p>
+<p><em>Note</em>: It&#39;s good practice to load your <code>&lt;script&gt;</code> tags as late as possible in
+the HTML. This way, your browser displays a (possibly functioning)
+correctly-rendered HTML document with CSS before using precious CPU cycles on
+parsing and interpreting JavaScript code. Also, avoid inline script tags in
+favor of linked <code>.js</code> files. These files should be loaded at the end of
+<code>&lt;body&gt;</code>:</p>
+<pre><code>&lt;!doctype html&gt;
+&lt;html&gt;
+  &lt;head ... &lt;/head&gt;
+  &lt;body&gt;
+    &lt;h1&gt;Welcome to CIS 197&lt;/h1&gt;
+    ...
+
+    &lt;script type=&quot;text/javascript&quot; src=&quot;scripts/foo.js&quot;&gt;&lt;/script&gt;
+    &lt;script type=&quot;text/javascript&quot; src=&quot;scripts/bar.js&quot;&gt;&lt;/script&gt;
+  &lt;/body&gt;
+&lt;/html&gt;
+</code></pre><p>There&#39;s no convenient way to load multiple scripts at once like this; you&#39;ll
+simply have to link all of them. But as we&#39;ll see later, various tools allow you
+to package your application into a single script, which is usually also good
+practice.</p>
+<h2 id="document-object-model">Document Object Model</h2>
+<p>Web pages structure is modeled using the Document Object Model, or DOM for
+short. We know that HTML is a heirarchical markup language, so it makes sense
+for our DOM to be a tree data structure.</p>
+<p><img src="http://eloquentjavascript.net/img/html.png" alt="DOM tree"></p>
+<p><em>Source</em>: Eloquent JavaScript</p>
+<p>In the above diagram we can see the two main kinds of DOM nodes:
+<em>regular nodes</em> and <em>text nodes</em>. Regular nodes are those with angle brackets in
+HTML markup <code>&lt; &gt;</code> and text nodes are simply inline strings (for example, the
+content of a <code>&lt;p&gt;</code> tag.</p>
+<p>The root of an HTML document is available as a global variable in the browser JS
+runtime called <code>document</code> -- this is the starting point for locating any other
+node in the tree. There are a number of properties available on nodes; explore
+them in a browser console and/or the
+<a href="https://developer.mozilla.org/en-US/docs/DOM/DOM_Reference">MDN DOM Reference</a>.</p>
+<pre><code>document.body;
+
+var firstNode = document.body.firstChild;
+
+if (firstNode.nodeType === 3) {
+  // Text node
+  console.log(&quot;First node contains text: &quot; + firstNode.nodeValue);
+} else {
+  // Regular node
+  var n = firstNode.childNodes.length;
+  console.log(&quot;First node has the tag &lt;&quot; + firstNode.nodeName + &quot;&gt; and
+  &quot; + n + &quot; child nodes&quot;);
+}
+</code></pre><p>So far what we&#39;ve observed is an <em>application programming interface</em> for an HTML
+document. Our web browser did the work to parse the DOM and model it for us. Can
+we write a function that does the opposite (given a DOM node, print out its
+HTML and the HTML of its children)?</p>
+<pre><code>var isTextNode = function (node) {
+      return node.nodeType === 3;
+}
+  , withBrackets = function (str, isClosing) {
+      if (isClosing) {
+        return &quot;&lt;&quot; + str.toLowerCase() + &quot;/&gt;&quot;;
+      } else {
+        return &quot;&lt;&quot; + str.toLowerCase() + &quot;&gt;&quot;;
+      }
+  };
+
+var toHTML = function (node) {
+  if (isTextNode(node)) {
+
+    return node.nodeValue;        // TODO: escape HTML
+
+  } else {
+
+    var buffer = withBrackets(node.nodeName)
+      , len = node.childNodes.length;
+
+    if (len) {
+      for (var i = 0; i &lt; len; i++) {
+        buffer += toHTML(node.childNodes[i]);
+      }
+
+      buffer += withBrackets(node.nodeName, true);
+    }
+
+    return buffer;
+  }
+};
+
+console.log(toHTML(document.body));
+</code></pre><p>This is a neat little implementation, but it turns out there&#39;s a built-in
+function with pretty similar (and more robust) functionality. The <code>outerHtml</code> 
+property on DOM nodes returns a string of the HTML representation of a node
+(itself included). <code>innerHtml</code> is the same, but it only looks at children of
+the node.</p>
+<pre><code>document.body.outerHtml;    // --&gt; &quot;&lt;body&gt;&lt;h1&gt;...&lt;/h1&gt;...&lt;/body&gt;&quot;
+</code></pre>
       </section>
     </div>
   </body>
