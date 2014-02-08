@@ -65,7 +65,7 @@ Code submissions are to be made using the Github submission system.
 Refer to the <a href="#style">style guide</a> for coding JavaScript.</p>
 <p>hw0: <a href="#github">Set up Github submission</a>.</p>
 <p>hw1, due <strong>Wed, Feb. 5</strong>: <a href="https://github.com/cis197s14/hw/blob/master/hw1/exercises.js">Finger exercises</a>.</p>
-<p>hw2, due <strong>Fri, Feb 14</strong>: XHTML object modeling.</p>
+<p>hw2, due <strong>Fri, Feb 14</strong>: <a href="#hw2">XML object modeling</a>.</p>
 <p>hw3, due <strong>Fri, Feb. 21</strong>: jQuery mini-project.</p>
 <p>hw4, due <strong>Fri, Feb. 28</strong>: Basic Backbone.js app.</p>
 <p>hw5, due <strong>Wed, March 19</strong>: Intermediate Backbone.js app.</p>
@@ -1452,6 +1452,173 @@ property on DOM nodes returns a string of the HTML representation of a node
 the node.</p>
 <pre><code>document.body.outerHtml;    // --&gt; &quot;&lt;body&gt;&lt;h1&gt;...&lt;/h1&gt;...&lt;/body&gt;&quot;
 </code></pre>
+      </section>
+      <section class="pure-u-3-4 notes hw2 language-javascript"><h1 id="homework-2-xml-document-modeling">Homework 2: XML Document Modeling</h1>
+<p>Due <em>Friday, February 14 at 9 PM</em> (note: not 9 AM).</p>
+<p>Implementation stub available in the <a href="https://github.com/cis197s14/hw/blob/master/hw2/xml-model.js">homework repository</a>.</p>
+<h2 id="before-starting-this-assignment">Before starting this assignment</h2>
+<p>Install the sax.js library by running <code>npm install sax</code> in the root of your
+homework directory. Also, add the line &quot;node_modules&quot; to your <code>.gitignore</code> file
+in this same folder (this prevents libraries from being committed to the git
+repository).</p>
+<p>See <a href="http://www.mulberrytech.com/papers/fromHTMLtoXML/slide012.html">this page</a>
+to understand the relationship between XML and HTML.</p>
+<h2 id="modeling-xml-documents">Modeling XML documents</h2>
+<p>In this assignment you&#39;re going to develop an API for working with XML
+documents. Similar to how web browsers parse an HTML document (which is very
+similar to XML in structure anyway) and produce the <strong>Document Object Model</strong>
+for us to work with in JavaScript, the tool you produce will be able to take an
+XML document (as a string) as input and generate a JavaScript object that can
+inspect and filter the document tree.</p>
+<p>First off, we ought to decide on a data structure to keep track of the XML nodes
+found during parsing. Since this is an exercise in object-oriented JS, we&#39;ll
+model XMLElements and the overall XMLDocument as objects.</p>
+<p><strong><em>TODO</em></strong>: Define a JavaScript class (using prototypes) called <code>XMLElement</code>
+with the following properties and methods. The sample values show the expected
+representation for an XML node like
+<code>&lt;question seq=&quot;1&quot;&gt;Who framed Roger Rabbit?&lt;/question&gt;</code>.</p>
+<pre><code>{
+  // Is this a document node or an element in the tree?
+  type: &#39;element&#39;,
+
+  // Name of the XML node
+  name: &#39;question&#39;,
+
+  // Hash of the node attributes
+  attributes: { seq: 1 },
+
+  /*
+   * Array of child nodes. Publicly provided in the API to allow for
+   * iteration over child nodes.
+   */
+  children: [ ... ],
+
+  /*
+   * Returns a list of nodes in this subtree that match the given `nodeName`
+   * by doing a recursive lookup.
+   */
+  find: function (nodeName) { },
+
+  /*
+   * Returns a list of nodes in this subtree that have matching attributes
+   * as provided by an input hash of attrs (names &amp; value pairs).
+   * If a particular attribute value is not provided (is undefined), this
+   * method should match simply on attribute names (whether certain nodes
+   * have that attribute at all).
+   */
+  findWithAttribute: function (attrs) { }
+}
+</code></pre><p>These are not the only properties and methods allowed in the class; feel free to
+add more as necessary for your implementation. If you define properties or
+methods that you intend to be private (not part of the XML document object
+model), it&#39;s good practice to signify this with an underscore <code>_</code> prefixed to
+the property / method name. For example, you might define a <code>_setAttributes</code>
+function on <code>XMLElement</code>s that takes a hash and updates the stored attributes
+for a node.</p>
+<p><strong><em>TODO</em></strong>: Define a class called <code>XMLText</code> that simply wraps a text string in
+the XML tree. For example, the text inside <code>&lt;greeting&gt;Hello world!&lt;/greeting&gt;</code>
+would be an <code>XMLText</code> object with the properties:</p>
+<pre><code>{
+  type: &#39;text&#39;,
+  value: &#39;Hello world!&#39;
+}
+</code></pre><p>Here&#39;s an example of what the children array in
+<code>&lt;xml&gt;Hello, &lt;who name=&quot;world&quot;&gt;world&lt;/who&gt;!&lt;/xml&gt;</code> would look like:</p>
+<pre><code>children: [
+  { type: &#39;text&#39;, value: &#39;Hello&#39; },       // XMLText
+  { type: &#39;element&#39;, name: &#39;who&#39;, ... },  // XMLElement
+  { type: &#39;text&#39;, value: &#39;!&#39; }            // XMLText
+]
+</code></pre><p><strong><em>TODO</em></strong>: Define another class called <code>XMLDocument</code> that inherits from
+<code>XMLELement</code>. Ensure it has these additional properties / methods:</p>
+<pre><code>{
+  // Is this a document node or an element in the tree?
+  type: &#39;document&#39;
+
+  /*
+   * Creates an XMLElement from a hash of params (structured in the same way
+   * as the XMLElement class definition above):
+   *
+   * params = { name: &#39;answer&#39;, attributes: { seq: 1 }, children: [...] }
+   *
+   * This element should be appended to the children of the document.
+   */
+  createElement: function (params) { },
+
+  /*
+   * Similar to `createElement`, this generates an XMLText node and adds it
+   * to the document.
+   */
+  createTextNode: function (string) { }
+}
+</code></pre><h2 id="generating-the-model">Generating the model</h2>
+<p>To actually do the string parsing of the XML Document, we&#39;re going to be using
+a library called <code>sax</code>. While understanding how a parser works is interesting on
+its own, I&#39;ll leave this topic for another course.</p>
+<p>This parser reads in an XML document and provides callback hooks for events
+that occur during parsing. If you&#39;re not familiar with callbacks -- they are
+a method of asynchronous control flow that allows you to define a function to be
+run when an event occurs. Some resources for more information about callbacks:</p>
+<ul>
+<li><a href="https://www.dropbox.com/s/6y4etm6u3ho8zym/Screenshot%202014-02-07%2021.34.58.png">JS, The Good Parts</a></li>
+<li><a href="http://recurial.com/programming/understanding-callback-functions-in-javascript/">Understanding Callback Functions in JS</a></li>
+</ul>
+<p>Parser events we are interested in are the following:</p>
+<ul>
+<li><code>onerror</code>: an error occurred in parsing; you should probably throw it.</li>
+<li><code>opentag</code>: parsed an opening tag for a node, like <code>&lt;question&gt;</code></li>
+<li><code>onclosetag</code>: parsed a closing tag for a node, like <code>&lt;/question&gt;</code></li>
+<li><code>ontext</code>: parsed some raw text within a node</li>
+<li><code>onattribute</code>: parsed a (name, value) pair for a node attribute</li>
+</ul>
+<p>See the <a href="https://github.com/isaacs/sax-js">sax.js documentation</a> for further
+reference. We don&#39;t care about CDATA for this assignment (even though it&#39;s in
+the XML standard).</p>
+<p>Your implementation should decide what to do when each of these events occurs.
+In the end, a single <code>XMLDocument</code> should be produced that models the whole
+tree. You should be able to interact with the document object by invoking its
+tree filtering methods.</p>
+<p>I have provided some implementation already in the <code>XMLDocumentBuilder</code> class
+that starts off the parser. The tricky part is to now fill in the parser
+callback hooks in a way that builds a proper tree model. While parsing, it
+would behoove you to keep track (with a reference in the document builder class)
+of the current <strong>context</strong> of the parser, or where it is in the tree. You won&#39;t
+get this information in the parser callback; simply the relevant information
+that was just parsed.</p>
+<h2 id="debugging">Debugging</h2>
+<p>In the implementation stub, there are module exports set up for the <code>xml-model</code>
+file. You are welcome to add more exports for testing. For example, if you set
+up a testing function called <code>testModel</code>, your exports at the bottom of the file
+might look like</p>
+<pre><code>module.exports = {
+  XMLElement: XMLElement,
+  XMLDocument: XMLDocument,
+  testModel: testModel
+};
+</code></pre><p>To run the file and load these exports into a node interpreter, use the
+following commands (in the hw2 folder):</p>
+<pre><code>bash-3.2$ node
+node&gt; var xml = require(&#39;./xml-model&#39;);
+node&gt; xml.testModel();
+</code></pre><p>Working with the returned <code>XMLDocument</code> might be a little tricky since it is
+only returned in a callback from <code>XMLDocumentBuilder</code>, so you could expose a
+global object and attach the built <code>XMLDocument</code> to this object in the callback.
+Something like this:</p>
+<pre><code>var MY_MODEL = { };
+
+var builder = new XMLDocumentBuilder(SAMPLE_XML, function (doc) {
+  MY_MODEL.doc = doc;
+});
+
+// -------------------------
+
+module.exports = {
+  model: MY_MODEL
+};
+</code></pre><p>Also, if you&#39;re feeling adventurous, you could learn about the
+<a href="http://nodejs.org/api/debugger.html">node debugger</a>
+(related: <a href="https://github.com/node-inspector/node-inspector">node-inspector</a>).</p>
+
       </section>
     </div>
   </body>
