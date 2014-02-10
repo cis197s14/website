@@ -131,7 +131,7 @@ available in April.</p>
                 <a href="https://developer.mozilla.org/en-US/docs/DOM">
                   [MDN] Document Object Model
                 </a> <br/>
-                Eloquent JS, Chapters 12 & 13
+                Eloquent JS, Chapters 12
                 
               </td>
             </tr>
@@ -142,7 +142,13 @@ available in April.</p>
                 Manipulating the DOM with jQuery <br/>
                 Webkit developer tools & debugging
               </td>
-              <td>Eloquent JS, Chapter 6</td>
+              <td>
+                Eloquent JS, Chapter 13 <br/>
+                <a href="https://developers.google.com/chrome-developer-tools/">
+                  Chrome DevTools docs
+                </a>
+                
+              </td>
             </tr>
             <tr>
               <td>5</td>
@@ -878,6 +884,14 @@ benefit of showing up with a proper identifier in stack traces.</p>
 <pre><code>var parseInt = function parseInt (string, radix) {
   ...
 };
+</code></pre><p>Alternatively, you can use a <em>function definition</em> syntax like the following
+example, but keep in mind that scoping works slightly differently – this
+function becomes available at the top of its scope while the above <em>function
+expression</em> syntax means that a function is only available when its expression
+is evaluated (and stored to that variable).</p>
+<pre><code>function parseInt (string, radix) {
+  ...
+};
 </code></pre><p><strong>Operators</strong></p>
 <p>Avoid doing assignments in the conditional of <code>if</code> and <code>while</code> statements:</p>
 <pre><code>if (a = b) {
@@ -888,7 +902,22 @@ avoid those as well. Don&#39;t use the <code>Function</code> constructor or pass
 <code>setTimeout</code> / <code>setInterval</code>.</p>
 <p>Similarly, <code>with</code> <a href="http://yuiblog.com/blog/2006/04/11/with-statement-considered-harmful/">should not be used</a>.</p>
 <hr>
-<p><strong><em>For a very detailed style guide, refer to
+<p>Finally, you should be including an IIFE in all your JavaScript files (to
+avoid polluting the global namespace), along with a <code>&#39;use strict&#39;</code> statement,
+which invokes stricter interpretation of your JS source
+(<a href="http://www.webdesignporto.com/why-use-strict-in-javascript-can-save-you-hours/">here&#39;s a more detailed explanation</a>).</p>
+<pre><code>// file.js
+(function () {
+  &#39;use strict&#39;;
+
+  // do stuff
+
+
+  module.exports = {
+    // export stuff
+  };
+})();
+</code></pre><p><strong><em>For a very detailed style guide, refer to
 <a href="https://github.com/rwaldron/idiomatic.js/">idiomatic.js</a>.</em></strong> (I generally
 agree with most of the conventions used there).</p>
 

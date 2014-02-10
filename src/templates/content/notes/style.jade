@@ -56,6 +56,16 @@
       var parseInt = function parseInt (string, radix) {
         ...
       };
+  
+  Alternatively, you can use a _function definition_ syntax like the following
+  example, but keep in mind that scoping works slightly differently – this
+  function becomes available at the top of its scope while the above _function
+  expression_ syntax means that a function is only available when its expression
+  is evaluated (and stored to that variable).
+
+      function parseInt (string, radix) {
+        ...
+      };
 
   __Operators__
 
@@ -74,6 +84,23 @@
   Similarly, `with` [should not be used](http://yuiblog.com/blog/2006/04/11/with-statement-considered-harmful/).
 
   ------------------------------------------------------------------------------
+
+  Finally, you should be including an IIFE in all your JavaScript files (to
+  avoid polluting the global namespace), along with a `'use strict'` statement,
+  which invokes stricter interpretation of your JS source
+  ([here's a more detailed explanation](http://www.webdesignporto.com/why-use-strict-in-javascript-can-save-you-hours/)).
+
+      // file.js
+      (function () {
+        'use strict';
+  
+        // do stuff
+  
+  
+        module.exports = {
+          // export stuff
+        };
+      })();
 
   ___For a very detailed style guide, refer to
   [idiomatic.js](https://github.com/rwaldron/idiomatic.js/).___ (I generally
