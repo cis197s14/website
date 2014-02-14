@@ -32,7 +32,8 @@
       SectionNav.prototype.onHashChange = function() {
         var section;
         section = window.location.hash.slice(1);
-        return this.navigateTo(section);
+        this.navigateTo(section);
+        return $(window).scrollTop(0);
       };
 
       return SectionNav;

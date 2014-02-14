@@ -29,6 +29,7 @@ define (require, exports, module) ->
     onHashChange: =>
       section = window.location.hash.slice(1)
       @navigateTo section
+      $(window).scrollTop(0)
 
   # DOM Ready ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   $ ->
