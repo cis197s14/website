@@ -139,8 +139,8 @@ available in April.</p>
               <td>4</td>
               <td>2/12</td>
               <td>
-                Manipulating the DOM with jQuery <br/>
-                Webkit developer tools & debugging
+                <a href="#dom-manipulation">DOM Manipulation</a> <br/>
+                <a href="#browser-events">Browser Events</a>
               </td>
               <td>
                 Eloquent JS, Chapter 13 <br/>
@@ -1647,6 +1647,512 @@ module.exports = {
 </code></pre><p>Also, if you&#39;re feeling adventurous, you could learn about the
 <a href="http://nodejs.org/api/debugger.html">node debugger</a>
 (related: <a href="https://github.com/node-inspector/node-inspector">node-inspector</a>).</p>
+
+      </section>
+      <section class="pure-u-3-4 notes dom-manipulation language-javascript"><h1 id="dom-manipulation">DOM Manipulation</h1>
+<h2 id="dom-review">DOM review</h2>
+<p>The <code>document</code> object gives us ways of accessing and changing the DOM of the
+current web page.</p>
+<p><strong>General strategy for DOM manipulation</strong>:</p>
+<ol>
+<li>Find a DOM node using an access method and store it into a variable.</li>
+<li>Manipulate the DOM node by changing its attributes, styles, inner HTML, or
+appending new nodes to it.</li>
+</ol>
+<p>Basic access methods: <code>getElementById</code>, <code>getElementsByTagName</code>
+HTML5 access methods: <code>getElementsByClassName</code>, <code>querySelector</code></p>
+<p><strong>Attributes</strong> are attached directly to the DOM element object; you can also use
+a getter / setter.</p>
+<pre><code>var img = document.getElementById(&#39;lolcat&#39;);
+
+var oldSrc = img.getAttribute(&#39;src&#39;);
+img.setAttribute(&#39;src&#39;, &#39;http://placekitten.com/100/500&#39;);
+
+img.src = oldSrc;
+</code></pre><p><strong>Styles</strong> are applied with the <code>style</code> object property on nodes:</p>
+<pre><code>img.style.padding = &#39;10px&#39;;
+</code></pre><p><strong>Changing content</strong> is possible with the <code>.innerHtml</code> property on nodes:</p>
+<pre><code>var photoContainer = document.getElementById(&#39;#photo-container&#39;);
+
+photoContainer.innerHtml = &quot;Here&#39;s the photo!&quot;;
+</code></pre><p><strong>Creating nodes</strong> is possible with document methods:</p>
+<pre><code>var photo = document.creatElement(&#39;img&#39;);
+photo.src = &#39;http://placekitten.com/100/500&#39;;
+
+photoContainer.appendChild(photo);
+</code></pre><p>These are the basics of working with the DOM. The rest of the lecture will build
+on these techniques and introduce <em>browser events</em>.</p>
+<hr>
+<h2 id="chrome-devtools">Chrome DevTools</h2>
+<p>Before we move on, though, we need to upgrade our toolkit for front end
+development. You all have a pretty powerful set of tools to inspect, debug, and
+profile web pages built into your browsers already – today I&#39;ll demonstrate the
+tools that ship in the Chrome browser (in-class demo).</p>
+<p>All of this applies to Firefox, Safari, and IE as well (at least their modern
+versions), as they have similar built-in dev tooling.</p>
+<p>For a web tutorial, refer to Google&#39;s
+<a href="https://developers.google.com/chrome-developer-tools/">DevTools docs</a>.</p>
+<hr>
+<p>So far in this course we&#39;ve been programming in vanilla JavaScript; that is, we
+haven&#39;t really introduced any dependencies to our source code.</p>
+<h2 id="what-is-jquery-">What is jQuery?</h2>
+<p>It&#39;s a <a href="http://jquery.com/">JavaScript library</a>. The most widely-used one ever.
+Here&#39;s why it&#39;s cool:</p>
+<ul>
+<li>Optimized, abstracted DOM manipulation</li>
+<li>Intuitive API and method syntax</li>
+<li>Expressive selector syntax (driven by CSS selectors)</li>
+<li>Bearable syntax for web requests</li>
+</ul>
+<p><em>It&#39;ll make your life a whole lot easier</em>.</p>
+<p>Let&#39;s look at a few of the things jQuery is useful for.</p>
+<h3 id="selecting-elements">Selecting elements</h3>
+<p>jQuery uses Sizzle, which is a CSS selector engine written in JavaScript.
+That means that you can select DOM elements in your JS source the same way
+you&#39;re selecting them to write CSS. Here are some examples:</p>
+<pre><code>// ID
+// ----------------------------------------------------------
+var myEl  = document.getElementById(&#39;myEl&#39;)
+  , $myEl = $(&#39;#myEl&#39;);
+
+// Tag name
+// ----------------------------------------------------------
+var myTable   = document.getElementsByTagName(&#39;table&#39;)
+  , $myTable  = $(&#39;table&#39;);
+
+// Descendant of ID
+// ----------------------------------------------------------
+var lessons   = document.getElementById(&#39;content&#39;).getElementsByClassName(&#39;lesson&#39;)
+  , $lessons  = $(&#39;#content lesson&#39;);
+
+// Every other node
+// ----------------------------------------------------------
+var inputs = document.getElementsByTagName(&#39;input&#39;)
+  , oddInputs = [];
+
+for (var i = 1, l = inputs.length; i &lt; l; i += 2) {
+  oddInputs.push(inputs[i]);
+}
+
+var $oddInputs = $(&#39;input:odd&#39;);
+</code></pre><p>You can see here that jQuery allows much more expressive and elegant selection
+functionality than that which is exposed by the DOM API. However, take caution
+– the Sizzle selector API hides some underlying performance assumptions you can
+make about your selection code. It&#39;s sort of a <em>leaky abstraction</em>, one
+which requires you to be knowledgeable about the lower-level functionality in
+order to write good, performant code.</p>
+<p>If you take a look at how the <a href="https://developer.mozilla.org/en-US/docs/Web/Guide/CSS/Writing_efficient_CSS#How_the_Style_System_Matches_Rules">style system matches rules</a>
+and similarly, how <a href="http://www.sitecrafting.com/blog/sizzle-jquery-selector-pitfalls">Sizzle selectors are evaluated</a>,
+you&#39;ll start to notice some pitfalls. Most of these apply to selectors in your
+CSS as well.</p>
+<p>The key to writing fast jQuery selectors is understanding which native functions
+the library can leverage (most importantly, <code>document.getElementById</code>,
+<code>document.getElementsByTagName</code>, and <code>element.getElementsByTagName</code>).
+Without these, jQuery must rely on a large DOM traversal loop that checks a
+large number of elements.</p>
+<ul>
+<li><p><strong>Don&#39;t qualify ID selectors</strong>. There&#39;s simply no advantage to doing this
+other than readability purposes (and if your ID isn&#39;t specific enough to be
+readable, consider revising that name).</p>
+<pre><code>$(&#39;.content #lesson1&#39;);     // BAD
+$(&#39;.lesson#lesson1&#39;);       // BAD
+
+$(&#39;#lesson1&#39;);              // GOOD
+</code></pre></li>
+<li><p><strong>Be careful with raw pseudo selectors</strong>. While pseudo selectors are very
+powerful, remember that they&#39;re not supported natively and if you don&#39;t limit
+your DOM search, it can be a slow lookup.</p>
+<pre><code>$(&#39;:input&#39;);                  // BAD
+$(&#39;:radio.show-more&#39;);        // BAD
+
+$(&#39;#myForm :input&#39;);          // OK
+$(&#39;input:radio.show-more&#39;);   // OK
+
+$(&#39;input, textarea, select&#39;); // GOOD (but verbose...)
+</code></pre></li>
+<li><p><strong>Class names are slow in IE</strong>. Keep in mind that all modern browsers except
+IE have <code>document.getElementsByClassName</code> built in, so it will be a slower
+lookup there. But then I suppose it&#39;s an issue of how much you care about your
+IE users...</p>
+</li>
+</ul>
+<p>To check the compatibility of DOM API methods like
+<code>document.getElementsByClassName</code> and <code>document.querySelectorAll</code> (which tries
+to consolidate selection in the same fashion as Sizzle), refer to the
+compatibility table at the bottom of a Mozilla Developer Network DOM reference
+page for that method.</p>
+<p><strong>One more thing</strong>: keep in mind that when you select something with jQuery, it
+gets wrapped into a <em>jQuery object instance</em> containing all* the library&#39;s
+functionality. Think this has a greater runtime cost than using the DOM API? You
+bet it does! So you&#39;ll want to avoid recurring selectors:</p>
+<pre><code>$(&#39;#myDiv&#39;).fadeout(function () {
+  $(&#39;#myDiv&#39;).css(&#39;color&#39;, &#39;red&#39;);
+  $(&#39;#myDiv&#39;).fadein();
+});
+</code></pre><p>... is better written as ...</p>
+<pre><code>var $elem = $(&#39;#elem_id&#39;);
+$elem.fadeout(function () {
+  $elem.css(&#39;color&#39;, &#39;red&#39;).fadein();
+});
+</code></pre><p>In this example you also see an example jQuery&#39;s chaining syntax, which makes
+for a nice-to-use API.</p>
+<p>* <em>Well, not exactly all the functionality -- there are some global methods
+&amp; constructors exposed on the jQuery object itself, like <code>$.Deferred</code>, etc.</em></p>
+<h3 id="manipulating-elements">Manipulating elements</h3>
+<p>Once you have your target element selected, what can you do with it?
+I won&#39;t go over all the methods available to jQuery object instances (see the
+<a href="http://api.jquery.com/">docs</a> for that), but it suffices to say that you have
+a lot of DOM manipulation power once you select an element with jQuery.</p>
+<pre><code>var $myDiv = $(&#39;#myDiv&#39;)
+  , $otherDiv = $(&#39;.other&#39;).clone();
+
+$myDiv.addClass(&#39;active&#39;);
+
+$myDiv.after(&#39;here comes another...&#39;);
+
+$myDiv.append($otherDiv);
+
+// Prepend numbers to the children of a node
+$myDiv.children().forEach(function (child, i) {
+  $(child).before(i + &#39;. &#39;);
+});
+
+// Query within a node subtree with CSS selector syntax
+$myDiv.find(&#39;a&#39;).each(function (i, anchor) {
+  // Keep in mind that in args  ^ index is first!
+
+  $a = $(anchor);
+
+  // Print contents, then clear them
+  console.log($a.text());
+  $a.empty();
+});
+
+var $inputs = $myDiv.find(&#39;input&#39;)
+$inputs.attr(&#39;username&#39;);
+
+if (!$myDiv.next()) {
+  console.log(&#39;#myDiv is the last child of its parent&#39;);
+}
+
+$myDiv.fadeOut(500);
+$myDiv.fadeIn(500);
+
+// Remove from DOM
+$myDiv.remove();
+</code></pre><p>As we saw above, we can chain some of these methods:</p>
+<pre><code>$myDiv.addClass(&#39;active&#39;).append($otherDiv);
+
+$mydiv.find(&#39;inputs&#39;).attr(&#39;username&#39;);
+
+$myDiv.fadeOut(500).fadeIn(500);
+</code></pre><p>This is possible because many jQuery methods return <code>this</code>, a self-referential
+pointer to the jQuery object instance being manipulated.</p>
+<pre><code>$.fn.empty = function () {
+  var elem, i = 0;
+
+  for (; (elem = this[i]) != null; i++) {
+    elem.innerHTML = &#39;&#39;;
+  }
+
+  return this;
+};
+</code></pre><hr>
+<h2 id="-things-i-learned-from-the-jquery-source-">&quot;Things I Learned from the jQuery Source&quot;</h2>
+<p><em>See the screencast <a href="http://www.paulirish.com/2010/10-things-i-learned-from-the-jquery-source/">here</a></em>.
+<em>Browser the source <a href="http://www.keyframesandcode.com/resources/javascript/deconstructed/jquery/">here</a></em>.</p>
+<p><strong>Undefined</strong></p>
+<p>To ensure a valid <code>undefined</code> keyword, jQuery and other libraries do something
+like this in their IIFE:</p>
+<pre><code>(function (window, document, undefined) {
+  ...
+})(this, document);
+</code></pre><p><strong>Animation</strong></p>
+<p>For animations: <code>$.delay()</code> only works if there&#39;s an animation queue already
+there, so this doesn&#39;t work:</p>
+<pre><code>$(elem).delay(2000).fadeOut()
+</code></pre><p>You can do one of the following instead:</p>
+<pre><code>$(elem).fadeIn().delay(2000).fadeOut()
+
+$(elem).queue(function () {
+  this.delay(2000).fadeOut()
+});
+</code></pre><p><strong>Browser Support</strong></p>
+<p><code>$.support</code> is the result of a bunch of tests on the current DOM to notify you
+of browser bugs, unsupported things, etc. Also use <code>$.browser</code> similarly.</p>
+<p><strong>Stylish things</strong></p>
+<p>When you&#39;re trying to assign a variable, you can do sometimes elegantly affect
+some state as well:</p>
+<pre><code>var head = document.getElementsByTagName(&#39;head&#39;)[0];
+
+var base = document.getElementsByTagName(&#39;base&#39;)[0] || (function () {
+  return head.insertBefore(d.createElement(&#39;base&#39;), head.firstChild);
+})();
+</code></pre><p>Similarly, nested ternary operators let you be concise in assignment:</p>
+<pre><code>if (data === &#39;true&#39;) {
+  data = true;
+} else if (data === &#39;false&#39;) {
+  data = false;
+} else if (data === &#39;null&#39;) {
+  data = null;
+} else if (!jQuery.isNaN(data)) {
+  data = parseFloat(data);
+}
+
+// ^ above can be rewritten as:
+
+data = data === &#39;true&#39; ? true :
+  data === &#39;false&#39; ? false :
+  data === &#39;null&#39; ? null :
+  !jQuery.isNaN(data) ? parseFloat(data) :
+  data;
+</code></pre><p>One last thing...</p>
+<pre><code>jQuery.fn === jQuery.prototype
+</code></pre><p>You&#39;ll see jQuery functions and plugins being defined on <code>jQuery.fn</code> (and it
+might show up in stack traces). It&#39;s just a prototype object (but it doesn&#39;t
+correspond to the pseudo-classes we&#39;ve been talking about).</p>
+<hr>
+<p><a href="#browser-events">Browser events &rarr;</a></p>
+<p><strong>References</strong>:</p>
+<ul>
+<li><em>Eloquent JS</em></li>
+<li><em>10 Things I Learned from the jQuery Source</em> (Paul Irish)</li>
+<li>Pamela Fox&#39;s <em><a href="http://www.teaching-materials.org/javascript/">JS Teaching Materials</a></em></li>
+</ul>
+
+      </section>
+      <section class="pure-u-3-4 notes browser-events language-javascript"><h1 id="browser-events">Browser Events</h1>
+<p><a href="#dom-manipulation">&larr; DOM Manipulation</a></p>
+<p>To build any application or web page that allows user interaction, you&#39;ll need
+to work with browser events.</p>
+<p>If you recall the <a href="#browsers">JS in browsers</a> notes, we saw an event handler
+being attached to a &quot;click&quot; event on a DOM node:</p>
+<pre><code>&lt;button class=&quot;submit&quot; onclick=&quot;myApp.submitFormAsync();&quot;&gt; Submit &lt;/button&gt;
+</code></pre><p>&quot;onclick&quot; handlers like this are not advised (you should generally keep JS code
+only in JS files), so here&#39;s the API for it in plain JS:</p>
+<pre><code>domNode.addEventListener( eventType, eventListener, useCapture );
+</code></pre><p>(the last argument indicates whether the event should bubble up in the DOM tree
+as normal)</p>
+<p>... so the above handler becomes:</p>
+<pre><code>// assume myApp.submitFormAsync is a defined method
+
+var button = document.getElementsByTagName(&#39;button&#39;);
+
+button.addEventListener(&#39;click&#39;, function () {
+  myApp.submitFormAsync();
+});
+</code></pre><p><strong><em>Events types</em></strong></p>
+<p>Browsers can trigger many different events (see the full reference
+<a href="https://developer.mozilla.org/en-US/docs/Web/Reference/Events">here</a>). Here are
+some important ones:</p>
+<ul>
+<li><a href="https://developer.mozilla.org/en/DOM/MouseEvent">Mouse</a>:
+<code>mousedown</code>, <code>mouseup</code>, <code>click</code>, <code>dblclick</code>, <code>mousemove</code>, <code>mouseover</code>,
+<code>mousewheel</code>, <code>mouseout</code>, <code>contextmenu</code></li>
+<li><a href="https://developer.mozilla.org/en/DOM/TouchEvent">Touch</a>:
+<code>touchstart</code>, <code>touchmove</code>, <code>touchend</code>, <code>touchcancel</code></li>
+<li><a href="https://developer.mozilla.org/en/DOM/KeyboardEvent">Keyboard</a>:
+<code>keydown</code>, <code>keypress</code>, <code>keyup</code></li>
+<li>Forms &amp; their elements: <code>focus</code>, <code>blur</code>, <code>change</code>, <code>submit</code></li>
+<li>Window: <code>scroll</code>, <code>resize</code>, <code>hashchange</code>, <code>load</code>, <code>unload</code></li>
+</ul>
+<p><strong><em>Listeners</em></strong> are functions bound to events that get executed when a certain
+event occurs (also known as event handlers). They are passed a properties object
+relevant to and created by the event. For example, a <code>MouseEvent</code> reports mouse
+coordinates:</p>
+<pre><code>document.addEventListener(&#39;mousemove&#39;, function (e) {
+  console.log(&#39;Moused to (&#39; + e.clientX + &#39;, &#39; + e.clientY + &#39;)&#39;);
+});
+</code></pre><p>Event targets are also often available to handlers with <code>event.target</code>; for
+example, it&#39;s often useful to know which element on a page was clicked.</p>
+<p><strong><em>Note</em></strong>: since browser JavaScript is single-threaded, no two event handlers
+run at once. If an event occurs during the execution of a handler, it gets added
+to an event queue to be handled after the main thread is freed up.</p>
+<hr>
+<h3 id="event-propagation">Event propagation</h3>
+<p>Events bubble up the DOM tree in a phenomenon known as <strong>event propagation</strong>.
+Let&#39;s take the example of a block of text in a <code>&lt;p&gt;</code> tag with links in it:</p>
+<pre><code>&lt;body&gt;
+  &lt;h1&gt;DOGECOIN&lt;/h1&gt;
+  &lt;p&gt;
+    dogecoin is an open source peer-to-peer cryptocurrency, favored by Shiba
+    Inus worldwide.
+
+    much newbie?
+    &lt;a href=&quot;/get-started&quot;&gt;read the getting started guide&lt;/a&gt;, then
+    &lt;a href=&quot;http://www.reddit.com/r/dogecoin&quot; target=&quot;_blank&quot;&gt;join the community at /r/dogecoin&lt;/a&gt;
+  &lt;/p&gt;
+&lt;/body&gt;
+</code></pre><p>When you click on one of these links, the browser follows this chain of events:</p>
+<ul>
+<li>Check if there are event handlers attached to those <code>&lt;a&gt;</code> tags (could have
+been attached to just the one clicked, the anchor links in the relevant
+paragraph, or all anchor tags in the document)</li>
+<li>Check if there are event handlers attached to the <code>&lt;p&gt;</code> tag</li>
+<li>Bubble the event up to any <code>&lt;body&gt;</code> handlers</li>
+<li>Finally execute the default <code>&lt;document&gt;</code> handler, which follows a link to
+another web resource</li>
+</ul>
+<p>If you want to prevent this kind of propagation up the document tree, you can
+use <code>event.stopPropagation</code>. <code>event.preventDefault</code> also exists to let you
+specify when the built-in browser functionality for an event should be ignored.</p>
+<h3 id="cross-browser-compatibility">Cross-browser compatibility</h3>
+<p>If you want your website to work across all browsers, there are a number of
+inconsistencies you&#39;re going to have to handle in your code. For example, IE8
+and below use this alternative method for attaching a click handler:</p>
+<pre><code>domNode.attachEvent(&#39;onclick&#39;, function () {
+  // do stuff
+});
+</code></pre><p>... and it doesn&#39;t even support the third argument, <code>useCapture</code>.</p>
+<p>We might try and be clever by creating a wrapper <code>registerEventHandler</code> function
+like so:</p>
+<pre><code>function registerEventHandler (elem, event, handler) {
+  if (typeof elem.addEventListener === &#39;function&#39;) {
+
+    // Regular browser
+    elem.addEventListener(event, handler);
+
+  } else {
+
+    // IE
+    elem.attachEvent(&#39;on + event, handler);
+
+  }
+}
+</code></pre><p>Similarly, to detach events, you&#39;d need something like this:</p>
+<pre><code>function unregisterEventHandler (elem, event, handler) {
+  if (typeof elem.removeEventListener === &#39;function&#39;) {
+
+    // Regular browser
+    elem.removeEventListener(event, handler, false);
+
+  } else {
+
+    // IE
+    elem.detachEvent(&#39;on&#39; + event, handler);
+
+  }
+}
+</code></pre><p>And while normally the <code>event</code> object passed to a handler contains event
+properties, IE8 and below attach these properties to a <strong>global event
+variable</strong>, so you might see code like this:</p>
+<pre><code>function onKeypress (event, handler) {
+  event = event || window.event;
+
+  // do stuff
+}
+
+registerEventHandler(document, &#39;keypress&#39;, onKeypress);
+</code></pre><p>For a detailed run down of these kinds of cross-browser incompatibilities, see
+<a href="http://eloquentjavascript.net/chapter13.html">Chapter 13</a> of <em>Eloquent JS</em>.</p>
+<h3 id="jquery-events-to-the-rescue-">jQuery events to the rescue!</h3>
+<p>Much in the same way that jQuery abstracts DOM manipulation for us, it can also
+come to the rescue for dealing with events. Let&#39;s say we have a hover event
+handler function like this:</p>
+<pre><code>function onHover (e) {
+  $(this).attr(&#39;hovered&#39;, true);
+}
+</code></pre><p>There are a few methods jQuery provides to bind handlers, including:</p>
+<ul>
+<li><p><code>bind</code>: the most straightforward, simply registers an event handler on each
+selected element in the jQuery object. Has related convenience methods like
+<code>click</code>, <code>hover</code>, etc.</p>
+</li>
+<li><p><code>live</code>: same as <code>bind</code>, but attaches the handler to the document, which allows
+it to capture events for dynamically added elements that match the selector
+(deprecated as of jQuery 1.7)</p>
+</li>
+<li><p><code>delegate</code>: a more nuanced version of <code>live</code> that lets you specify where to
+attach the handler:</p>
+<pre><code>$(&#39;#dropdown&#39;).delegate(&#39;option&#39;, &#39;hover&#39;, onHover);
+</code></pre></li>
+<li><p><code>on</code> is versatile and it allows you to emulate the above 3 methods; this is
+the most recommended:</p>
+<pre><code>$(&#39;#dropdown option&#39;).on(&#39;hover&#39;, onHover);
+
+$(document).on(&#39;#dropdown option&#39;, &#39;hover&#39;, onHover);
+
+$(&#39;#dropdown&#39;).on(&#39;option&#39;, &#39;hover&#39;, onHover);
+</code></pre></li>
+</ul>
+<p><a href="http://www.elijahmanor.com/differences-between-jquery-bind-vs-live-vs-delegate-vs-on/">This article</a>,
+although slightly outdated, does a great job of explaining the differences in
+these approaches.</p>
+<h3 id="document-ready-state">Document ready state</h3>
+<p>After your browser successfully receives a web page response from an HTTP
+request and parses its HTML, it has to do work to layout elements on
+the page from the HTML markup. There&#39;s a delay (on the order of milliseconds)
+between content appearing in your browser window and the DOM actually being
+<strong>ready</strong>. (<em>Note</em>: keep in mind that script execution can occur either
+before or after HTML layout, depending on where the <code>&lt;script&gt;</code> tag is in the
+HTML markup).</p>
+<p>Once a document is &quot;ready&quot;, you can reliably interact with it in a script.
+<code>document.readyState</code> is set to <code>&#39;complete&#39;</code> when this event occurs. Most logic
+in your JS applications should occur only after this event, so it&#39;s a common
+pattern you&#39;ll encounter.</p>
+<p>Typically, you can listen for the <code>&#39;DOMContentLoaded&#39;</code> event on the <code>document</code> and
+run all your important DOM-interacting code within an event handler like this:</p>
+<pre><code>function onDOMReady () {
+  // do everything
+}
+
+document.addEventListener(&#39;DOMContentLoaded&#39;, onDOMReady);
+</code></pre><p>Unfortunately, this event isn&#39;t fired in all versions of IE. The <code>&#39;load&#39;</code> event
+on the <code>window</code> object is a pretty reliable callback:</p>
+<pre><code>window.addEventListener(&#39;load&#39;, onDOMReady);
+</code></pre><p>But this doesn&#39;t capture all of the state of <em>document ready</em>. Using jQuery is
+usually your best bet for a reliable document ready state across all browsers as
+it handles most of the compatibility edge cases you might encounter. There is
+a convenient event binding method called <code>ready</code> on a jQuery selection of the
+<code>document</code>:</p>
+<pre><code>$(document).ready(onDOMReady);
+</code></pre><p>A shorter syntax for this exists in modern jQuery. If you pass a function as the
+first argument to the <code>$</code> function, that function gets executed on document
+ready.</p>
+<pre><code>$(onDOMReady);
+</code></pre><p>In practice, an anonymous function is typically used (this is currently the
+preferred syntax):</p>
+<pre><code>$(function () {
+  // do everything
+});
+</code></pre><p>If possible, you should keep your DOM-ready code small and organized, such that
+application logic that doesn&#39;t deal specifically with the DOM exists outside of
+this function. A typical file structure might look like this (recall the advice
+about separation of pure functions from impure ones, and think about how it
+relates here):</p>
+<pre><code>// myScript.js
+(function () {
+  &#39;use strict&#39;;
+
+  /*
+   * File-scoped global variables &amp; imports
+   */
+  // var foo = {}, bar = &#39;baz&#39;, ...;
+
+
+  // JS functions and classes that don&#39;t interact with the DOM
+
+
+  // Document ready
+  $(function () {
+
+    // DOM interaction logic
+
+  });
+
+
+  // Exports, if any
+  module.exports = {
+    // ...
+  };
+
+})();
+</code></pre><hr>
+<p><strong>References</strong>:</p>
+<ul>
+<li><em>Eloquent JS</em></li>
+<li><a href="http://youmightnotneedjquery.com/">You Might Not Need jQuery</a></li>
+</ul>
 
       </section>
     </div>
