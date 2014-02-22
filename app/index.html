@@ -154,8 +154,8 @@ available in April.</p>
               <td>5</td>
               <td>2/19</td>
               <td>
-                Functional Programming with Underscore.js <br/>
-                Introduction to client-side MVC
+                <a href="#functional">Functional Programming in JS</a> <br/>
+                <a href="#mvc">Introduction to client-side MVC</a>
               </td>
               <td>
                 Eloquent JS, Chapter 6 <br/>
@@ -2357,6 +2357,561 @@ tiles are terrain and which are obstructions).</p>
 <h2 id="debugging">Debugging</h2>
 <p>Check out the Chrome DevTools docs / tutorials on
 <a href="https://developers.google.com/chrome-developer-tools/docs/javascript-debugging">JavaScript debugging</a>.</p>
+
+      </section>
+      <section class="pure-u-3-4 notes functional language-javascript"><h1 id="functional-programming-in-javascript">Functional Programming in JavaScript</h1>
+<p>As engineers and problem solvers, we often try to reduce the complexity of our
+problems and solutions. This is especially important in programming, where we
+are presented with a dichotomy of two seemingly incongruous systems: a very
+low-level computer and a high-level thinking human. Computer scientists use
+<strong>abstractions</strong> to keep the problem space at hand small.</p>
+<p>When presenting a solution to a problem (essentially what a piece of code
+<em>does</em>), it is helpful to assume prior knowledge about all low-level details
+around the problem. Similarly, when I tell you a food recipe, I hope I don&#39;t
+have to explain to you how to boil water or dice onions -- rather, I&#39;d like to
+tell you <strong>how abstract, agreed-upon elements fit and work together</strong> to
+accomplish the task of preparing a certain meal.</p>
+<p>One approach to abstraction we&#39;ve already looked at is object-oriented
+programming. This lecture will instead focus on <strong>functional programming</strong> (FP),
+a method of abstraction through clever uses of functions &amp; their composition. As
+I&#39;ve been hinting at, JavaScript is a prime candidate for functional programming
+(mainly due to first-class function objects).</p>
+<p>The simplest motivating example that applies here is the all-too-tired <code>for</code>
+loop. We&#39;ve written this kind of code often:</p>
+<pre><code>for (var i = 0, l = arr.length; i &lt; l; i++) {
+  // do stuff to arr[i]
+}
+</code></pre><p>You probably already have ideas for how <code>do stuff to arr[i]</code> here can be
+abstracted. Functions, are, after all, quite useful for &quot;doing stuff&quot;:</p>
+<pre><code>function forEach (array, fn) {
+  for (var i = 0, l = array.length; i &lt; l; i++) {
+    fn(arr[i], i);
+  }
+}
+</code></pre><p>Here, we&#39;ve abstracted the low-level details of a <code>for</code> loop into <code>forEach</code>,
+which better expresses our <em>intent</em> with the code. What if we wanted to take
+this further to other functions that iterate over arrays?</p>
+<pre><code>function parseIntArray (array) {
+  var newArr = [];
+
+  forEach(array, function (el) {
+    newArr.push(parseInt(el, 10));
+  });
+
+  return newArr;
+}
+
+function getClasses (elements) {
+  var classes = [];
+
+  forEach(elements, function (el) {
+    classes.concat(el.classList);
+  });
+
+  return classes;
+}
+</code></pre><p>You start to get the idea. We can create another useful abstraction here --
+notice how the above functions both take an array of elements and return
+a &quot;transformed&quot; array.</p>
+<pre><code>var map = function (array, fn) {
+  var newArr;
+
+  // Recall that we were nice enough to provide the index to this iterator
+  forEach(array, function (el, i) {
+    newArr.push(fn(el, i));
+  });
+
+  return newArr;
+}
+
+var parseIntBaseTen = function  (str) { return parseInt(str, 10) };
+
+var parseIntArray = function (array) {
+  map(array, parseIntBaseTen);
+};
+</code></pre><p><code>map</code> is the first important higher-order function in FP. But we may want to do
+more things with arrays than just transform them into other arrays. Consider:</p>
+<pre><code>var sum = function (array) {
+  var total = 0;
+
+  forEach(array, function (el) {
+    total += el;
+  });
+
+  return total;
+};
+
+var find = function (elements, tag) {
+  var filtered = [];
+
+  forEach(elements, function (el) {
+    if (el.name === tag) {
+      filtered.push(el);
+    }
+  });
+
+  return filtered;
+}
+</code></pre><p><code>sum</code> and <code>find</code> might not seem immediately similar, but we can in fact abstract
+such logic into a higher-order function called <code>fold</code> (or <code>reduce</code>), which
+builds up a single value from an array of values:</p>
+<pre><code>var foldl = function (arr, fn, base) {
+  forEach(arr, function (el, i) {
+    base = fn(base, el, i);
+  });
+
+  return base;
+};
+
+var sum = function (arr) {
+  function mkTotal (base, el) {
+    base += el;
+  }
+
+  return foldl(arr, mkTotal, 0);
+}
+</code></pre><p><code>base</code> here is the initial value of the fold as well as the final built-up
+value. Can you trace the execution of <code>sum</code> here as implemented with a fold?</p>
+<p><strong><em>Prompt</em></strong>: try implementing <code>filter</code> with a fold. It takes two arguments: an
+<code>array</code> to filter and a <code>predicate</code> function that tests an array element for
+inclusion in the output.</p>
+<hr>
+<p>In creating <code>parseIntArray</code> above, we almost touched on a couple more important
+bits of FP: composition and partial application. Function composition works as
+you&#39;re familiar with it from mathematics.</p>
+<pre><code>var addTen = function (i) { return i + 10; },
+    double = function (i) { return i * 2; };
+
+var comp = function (f, g) {
+  return (function (input) {
+    return f(g(input));
+  });
+};
+
+// Note the order of operations.
+var doubleThenAddTen = comp(addTen, double);
+</code></pre><p>We had to make a function to accomplish the composition. Other more functional
+languages have convenient syntax for this (like <code>$</code> in Haskell), but we&#39;ll have
+to make do with our functions in JavaScript.</p>
+<p>Let&#39;s go back to the <code>parseIntArray</code> example. You can also accomplish partial
+application in a similar manner:</p>
+<pre><code>// Syntactic sugar for the most common use of `parseInt`
+var parseIntBaseTen = function (i) { parseInt(i, 10); };
+
+// Partially apply `map` by returning an anonymous function
+var mapWithFunction = function (fn) {
+  return (function (arr) {
+    return map(arr, fn);
+  });
+};
+
+var parseIntArray = mapWithFunction(parseIntBaseTen);
+</code></pre><p>These are some examples of the powerful nature of first-class function objects.
+The variables defined in the above block are all functions -- hopefully this
+helps you understand why some might prefer the <code>var fn = function ...</code> syntax to
+some extent.</p>
+<hr>
+<h2 id="underscore-js">Underscore.js</h2>
+<p>Working with functions and throwing them around in this way is fun, but soon
+we&#39;d end up implementing a lot of higher-order functions and wonder if only
+there was someone out there who had the sense to build a library with all the
+useful ones in it...</p>
+<p>Lucky you! Some crafty JS developers at
+<a href="http://www.documentcloud.org/">DocumentCloud</a>
+(mainly, <a href="https://github.com/jashkenas">Jeremy Ashkenas</a>) have built just that
+library.</p>
+<p><a href="http://underscorejs.org/">Underscore</a> is broadly defined as
+<strong><em>the JavaScript utility belt</em></strong>.
+Or, what should have been built into the standard library. On the library&#39;s home
+page, they describe it as the answer to the question:</p>
+<blockquote>
+<p>If I sit down in front of a blank HTML page, and want to start being
+productive immediately, what do I need?</p>
+</blockquote>
+<p>There are four essential parts to this library. I&#39;ve listed some of the
+important functions from each section:</p>
+<h4 id="collections">Collections</h4>
+<p><em>Note</em>: &quot;Collections&quot; functions work on <strong>both</strong> Arrays and Objects.</p>
+<ul>
+<li><code>each</code></li>
+<li><code>map</code></li>
+<li><code>reduce</code></li>
+<li><code>find</code></li>
+<li><code>filter</code></li>
+<li><code>reject</code></li>
+<li><code>pluck</code></li>
+<li><code>sortBy</code></li>
+</ul>
+<h4 id="arrays">Arrays</h4>
+<ul>
+<li><code>first</code></li>
+<li><code>last</code></li>
+<li><code>flatten</code></li>
+<li><code>union</code></li>
+<li><code>intersection</code></li>
+<li><code>difference</code></li>
+<li><code>uniq</code></li>
+<li><code>zip</code></li>
+</ul>
+<h4 id="functions">Functions</h4>
+<ul>
+<li><code>bind</code></li>
+<li><code>partial</code></li>
+<li><code>memoize</code></li>
+<li><code>debounce</code></li>
+<li><code>compose</code></li>
+</ul>
+<h4 id="objects">Objects</h4>
+<ul>
+<li><code>keys</code></li>
+<li><code>values</code></li>
+<li><code>pairs</code></li>
+<li><code>extend</code></li>
+<li><code>pick</code></li>
+<li><code>omit</code></li>
+<li><code>clone</code></li>
+<li><code>has</code></li>
+</ul>
+<hr>
+<h3 id="using-underscore">Using Underscore</h3>
+<p>If we&#39;re really trying to be functional, we&#39;ll compose most of our logic as a
+series of operations done on a piece of data. Imperative programming broadly
+does this through a sequence of statements, but we want to do it with functions
+because hey, this is a lecture on functional programming! There are two ways to
+do this sequential composition in Underscore.</p>
+<p>In a manner similar to jQuery object instances, Underscore provides
+functionality for turning arrays and objects (generically, &quot;collections&quot;) into
+<em>wrapped</em> objects. Here&#39;s the difference:</p>
+<pre><code>function double (n) { return n * 2; }
+
+_.map([1, 2, 3], double);   // Array
+
+_([1, 2, 3]).map(double);   // wrapped collection
+</code></pre><p>Wrapped collections have the benefit that <strong>you can chain methods on them</strong>.
+Notice the difference in the two styles of composition:</p>
+<pre><code>var stooges = [
+  { name: &#39;curly&#39;,  age: 25 },
+  { name: &#39;moe&#39;,    age: 21 },
+  { name: &#39;larry&#39;,  age: 23 }
+];
+
+var getAge = function (stooge) { return stooge.age; };
+var rejectShortNames = function (stooge) { return stooge.name.length &gt; 3; };
+
+var youngest = _.first(_.sortBy(_.filter(stooges, rejectShortNames), getAge));
+
+youngest = _.chain(stooges)
+            .filter(rejectShortNames)
+            .sortBy(getAge)
+            .first()
+            .value();
+</code></pre><p>The first expression to generate <code>youngest</code> looks kind of ugly, while the second
+uses the nicer-looking chaining syntax.</p>
+<p>Note that in the second case I had to explicitly call <code>chain</code> to turn <code>stooges</code>
+into a wrapped object for chaining. This is required when some methods in your
+function chain do not return wrapped objects, like <code>filter</code> and <code>sort</code>; <code>chain</code>
+ensures that a wrapped object is returned on every call (it even delegates
+built-in <code>Array.prototype</code> methods). To get back an <code>Array</code> or <code>Object</code> from
+a wrapped collection, you must call <code>.value()</code> on it.</p>
+<hr>
+<p>Many of these are abstractions over varying JavaScript implementations, in the
+same way that jQuery abstracts over differing DOM API implementations. So, in
+the spirit of abstraction, readability, and robustness, I generally recommend
+it on all projects.</p>
+<p>(<em>Time permitting</em>) Let&#39;s explore
+<a href="http://underscorejs.org/docs/underscore.html">the source</a>!</p>
+<h3 id="fp-libraries">FP libraries</h3>
+<p>While Underscore is quite a popular library, there are a few libraries that
+facilitate functional programming JavaScript by providing features borrowed from
+more pure functional languages.</p>
+<ul>
+<li><a href="http://lodash.com/">Lodash</a>, a drop-in replacement for Underscore</li>
+<li><a href="http://osteele.com/sources/javascript/functional/">Functional</a></li>
+<li><a href="https://github.com/raganwald/allong.es">allong.es</a></li>
+<li><a href="https://github.com/raganwald/JQuery-Combinators">jQuery Combinators</a></li>
+<li><a href="https://github.com/puffnfresh/bilby.js">bilby.js</a></li>
+</ul>
+
+      </section>
+      <section class="pure-u-3-4 notes mvc language-javascript"><h1 id="model-view-controller">Model-View-Controller</h1>
+<h3 id="definition">Definition</h3>
+<p>MVC is an architectural design pattern in software that tries to organize
+application logic by applying separation of concerns. As the name suggests,
+there are three types of components:</p>
+<ol>
+<li><strong>Models</strong> contain business data &amp; logic.</li>
+<li><strong>Views</strong> contain interface logic &amp; representation.</li>
+<li><strong>Controllers</strong> capture input &amp; interactions and coordinate between <strong>Views</strong>
+&amp; <strong>Models</strong>.</li>
+</ol>
+<p>Again, the key here is a <strong>separation of concerns</strong>. Models shouldn&#39;t have to
+know anything about what Views do and vice versa.</p>
+<h2 id="mvc-in-web-servers">MVC in web servers</h2>
+<p>When building a web server, your method of interaction with the user is through
+HTTP requests. Requests are stateless, so there is a new context created between
+the browser and server on every interaction. This is quite different from the
+initial MVC frameworks developed for operating systems (where it was originally
+defined by the <a href="http://en.wikipedia.org/wiki/Design_Patterns">Gang of Four</a>), so
+it&#39;s worthwhile to study how MVC is applied to web servers before proceeding.</p>
+<p>Ruby on Rails is an MVC framework for programming web servers.</p>
+<p><img src="http://addyosmani.github.io/backbone-fundamentals/img/webmvcflow_bacic.png" alt="server mvc"></p>
+<p><em>Source</em>: Backbone Fundamentals</p>
+<ul>
+<li><strong>Models</strong> represent the application&#39;s data as well as rules for transforming
+&amp; storing it. A model is responsible for talking to the application&#39;s
+database; you will generally have one DB table for each model.</li>
+<li><strong>Views</strong> represent the interface to a web browser, often in the form of HTML
+pages (but sometimes JSON, etc.). These are generally useless without
+application data supplied by models.</li>
+<li><strong>Controllers</strong> glue together models and views by processing (routing) web
+requests, asking models for data, and populating views to construct responses
+for the web browser.</li>
+</ul>
+<p>There is usually an additional component, a <strong>router</strong>, which analyzes a web
+request and determines which <strong>controller</strong> to employ and which <strong>action</strong> to
+invoke on it (hence, <code>ActionController</code> in Rails). For example consider these
+web application URLs:</p>
+<ul>
+<li><code>/users/afl23jniovxc34/edit</code>: users controller grabs user, invokes edit action</li>
+<li><code>/users/new</code>: users controller invokes new action</li>
+<li><code>/pages/542</code>: pages controller grabs page, invokes show action</li>
+</ul>
+<p>This turns out to be pretty good system to deliver web applications in
+a maintainable way. Servers are fast, interpreted languages are friendly, and
+MVC encourages separation of concerns. Great.</p>
+<p>No system is perfect, though. The weak part at this point becomes the HTTP
+requests that allow browsers and servers to interact. Even with heavy caching,
+page reloads are relatively slow. So what can we do?</p>
+<h2 id="motivation-mvc-on-the-client">Motivation: MVC on the client</h2>
+<p>Up to this point, we&#39;ve used JavaScript to add some interspersed interactivity
+to our web page. An element click here, a mouse hover there, etc. There is a new
+paradigm of delivering web applications that has become popular in the last few
+years, one that places a lot more <em>responsibility</em> on client-side JS rather
+than on the server.</p>
+<p><strong>Single Page Applications</strong> (SPAs) work by loading data into the browser once
+from a server request and then reacting to data changes (&amp; user interaction) on
+the client side without complete page refreshes (new full request cycles) to the
+server. When more data is needed from the server, an AJAX request is initiated
+with a server API endpoint. On reponse, the client-side application reacts
+accordingly.</p>
+<p>With all this new logic happening on the client, your JavaScript applications
+quickly start to get quite complicated. Rather than just displaying information
+in the form of HTML/CSS and responding to some browser events, your app now has
+to maintain state of <em>models</em> and initiate web requests of its own.</p>
+<p>You might be tempted to accomplish this all with something like jQuery, but this
+approach often leads to lots of unorganized spaghetti code. It&#39;s all too easy to
+end up frantically trying to keep data in sync between the HTML UI, your
+JavaScript logic, and the database on the server. Eventually, you&#39;ll be
+reimplementing a lot of the things that existing client-side frameworks or
+libraries already include. Here&#39;s where client-side MVC comes in.</p>
+<h2 id="manifestation-backbone-js">Manifestation: Backbone.js</h2>
+<p>Backbone.js is an MV* &quot;framework&quot; for client-side programming. It isn&#39;t quite
+MVC, but it&#39;s a good start.</p>
+<blockquote>
+<p>Backbone.js is a lightweight JavaScript library that adds structure to
+your client-side code. It makes it easy to manage and decouple concerns in
+your application, leaving you with code that is more maintainable in the long
+term.</p>
+<p>Backbone focuses on giving you helpful methods for querying and manipulating
+your data rather than re-inventing the JavaScript object model. It&#39;s
+a library, rather than a framework, that plays well with others and scales
+well, from embedded widgets to large-scale applications.</p>
+<p>Backbone provides a minimal set of data-structuring (Models, Collections) and
+user interface (Views, URLs) primitives that are helpful when building dynamic
+applications using JavaScript. It’s not opinionated, meaning you have the
+freedom and flexibility to build the best experience for your web application
+how you see fit. You can either use the prescribed architecture it offers out
+of the box or extend it to meet your requirements.</p>
+</blockquote>
+<p><em>Source</em>: Backbone Fundamentals</p>
+<p>Some encouraging thoughts from Addy Osmani! Hopefully this has piqued your
+interest in using a library like Backbone.</p>
+<p>Now, of course, Backbone isn&#39;t the only client-side framework or library out
+there. There are many others and they suit various needs. We&#39;re going to start
+with Backbone, however, because it&#39;s mature, popular, and has a vibrant
+developer community. It&#39;s also relatively simple; you&#39;ll spend less time
+wondering about &quot;magic&quot; occurring under the hood in your application.</p>
+<p>You can read more about Backbone on its <a href="http://backbonejs.org/">website</a>.</p>
+<h3 id="diving-into-backbone">Diving into Backbone</h3>
+<p>The one hard dependency that Backbone requires is Underscore.js. In addition,
+developers usually include jQuery (the functionality doesn&#39;t overlap) or some
+other DOM manipulation library.</p>
+<p>Here&#39;s a high-level overview of Backbone&#39;s features. The following are all JS
+&quot;classes&quot; that can be extended and constructed:</p>
+<ul>
+<li><strong>Models</strong> are used to represent your data and can be <em>created</em>, <em>validated</em>,
+<em>destroyed</em>, and <em>saved to data storage</em>.</li>
+<li><strong>Views</strong> organize your interface into logical views backed by models. They
+also serve as the traditional &quot;controller&quot; in MVC -- but rather than
+responding to server requests, they respond to browser events.</li>
+<li><strong>Collections</strong> are ordered sets of Models. They have a few convenience
+methods you might expect from lists of models, and they also delegate events
+from their elements to the whole collection.</li>
+<li><strong>History</strong> provides an API for navigation in the SPA. It allows you to listen
+for <code>hashchange</code> or <code>pushState</code> events.</li>
+<li><strong>Router</strong> works in conjunction with History to allow you to decide which
+application logic should run (views generated, etc.) on certain URL locations
+in the app.</li>
+</ul>
+<p>In addition, there&#39;s a handy mixin utility class:</p>
+<ul>
+<li><strong>Backbone.Events</strong> is a module that is mixed into Models. It provides
+a convenient syntax for event dispatching. You can listen for &quot;change&quot; events
+on Models with fine detail and update your Views accordingly.</li>
+</ul>
+<p>Let&#39;s start by looking at the tried-and-true to do list example. Markup in
+<code>index.html</code> might look like:</p>
+<pre><code>&lt;!doctype html&gt;
+&lt;html&gt;
+&lt;head&gt;
+  &lt;title&gt;To Do List&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;div id=&quot;todo-list&quot;&gt;
+  &lt;/div&gt;
+
+  &lt;script type=&quot;text/template&quot; id=&quot;item-template&quot;&gt;
+    &lt;input id=&quot;todo-complete&quot; type=&quot;checkbox&quot; &lt;%= completed ? &#39;checked=&quot;checked&quot;&#39; : &#39;&#39; %&gt; /&gt;
+    &lt;%= title %&gt;
+    &lt;span class=&quot;owner&quot;&gt;&lt;%= owner %&gt;
+  &lt;/script&gt;
+
+  &lt;!-- load scripts in order --&gt;
+  &lt;script src=&quot;lib/jquery.js&quot;&gt;&lt;/script&gt;
+  &lt;script src=&quot;lib/underscore.js&quot;&gt;&lt;/script&gt;
+  &lt;script src=&quot;lib/backbone.js&quot;&gt;&lt;/script&gt;
+  &lt;script src=&quot;todo.js&quot;&gt;&lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</code></pre><p><code>todo.js</code> includes the following code (within its IIFE):</p>
+<pre><code>var Todo = Backbone.Model.extend({
+
+  defaults: {
+    title: &#39;&#39;,
+    completed: false
+  }
+
+});
+</code></pre><p>Immediately you might notice that we are defining attributes to extend from the
+globally-available <code>Backbone.Model</code>. This is similar to class inheritance --
+a <code>Todo</code> is a special kind of <code>Backbone.Model</code>. (It&#39;s not quite prototypical
+inheritance since <code>extend</code> only clones an object and adds additional
+properties).</p>
+<p>The <code>Todo</code> model holds the data for each todo item. Later, we will group models
+together into <code>Collection</code>s. We&#39;ll also explore a way of persisting models to
+some data store (API, database, etc.).</p>
+<p>Now here&#39;s the todo View:</p>
+<pre><code>// Renders a todo item and manages its UI interactions
+var TodoView = Backbone.View.extend({
+
+  // Directive to Backbone telling it wrap this view in an &#39;li&#39;
+  tagName: &#39;li&#39;,
+
+  // Returns a function that generates an HTML string
+  tmpl: (function () {
+    var $tmpl = $(&#39;#item-template&#39;);
+    return _.template($tmpl.html());
+  })(),
+
+  // Maps events on elements within this view to view methods
+  events: {
+    &#39;dblclick label&#39;: &#39;edit&#39;,
+    &#39;keypress .edit&#39;: &#39;updateOnEnter&#39;,
+    &#39;blur .edit&#39;:     &#39;close&#39;
+  },
+
+  // Executed when a Todo is created
+  initialize: function () {
+    this.$el = $(&#39;#todo-list&#39;);
+  },
+
+  // Writes this view&#39;s HTML representation to the DOM
+  render: function () {
+    var renderedTmpl = this.tmpl(this.model.toJSON());
+    this.$el.html(renderedTmpl);
+    this.input = this.$(&#39;.edit&#39;);
+    return this;
+  },
+
+  // Executed when todo item is double-clicked
+  edit: function () {
+
+  },
+
+  // Executed when todo item loses focus
+  close: function () {
+
+  },
+
+  // Executed on each keypress when editing a todo item
+  updateOnEnter: function (e) {
+
+  }
+
+});
+</code></pre><p>There are a lot of things happening here, and it&#39;s not entirely obvious which
+functions get called first. When a <code>Backbone.View</code> is created, its <code>initialize</code>
+method is called and its <code>events</code> object is parsed to register event handlers.</p>
+<p>Later, when this view is rendered with the <code>render</code> function, it looks up its
+template and generates an HTML string from a JSON representation of its model.
+Only then can you query for elements available in the view&#39;s template (they
+become available in the <code>document</code>).</p>
+<p><strong><em>A note on client-side templating</em></strong>: It is possible to generate HTML as
+strings or through jQuery methods and add classes, attributes, etc. to them. But
+this quickly becomes tedious in any moderately-sized application. A better
+solution is to use a <em>templating framework</em>, which allows you to define
+common <strong>templates</strong> interface elements as HTML skeletons with interpolated
+values built-in. These values are later filled in by a JSON object representing
+some application data. For example, we have defined the following Underscore
+template in our HTML page, which uses <code>&lt;%= %&gt;</code> as interpolation delimiters:</p>
+<pre><code>&lt;script type=&quot;text/template&quot; id=&quot;item-template&quot;&gt;
+  &lt;input id=&quot;todo-complete&quot; type=&quot;checkbox&quot; &lt;%= completed ? &#39;checked=&quot;checked&quot;&#39; : &#39;&#39; %&gt; /&gt;
+  &lt;%= title %&gt;
+  &lt;span class=&quot;owner&quot;&gt;&lt;%= owner %&gt;
+&lt;/script&gt;
+</code></pre><p>The method <code>_.template</code> will look on the page for such a template wrapped in
+a <code>&lt;script&gt;</code> tag and parse it into a function.</p>
+<pre><code>// Returns a string-generating function
+var tmpl = _.template(&#39;item-template&#39;)
+  , data = {
+      title: &#39;Complete homework 3 by Saturday&#39;,
+      owner: &#39;Tim Miller&#39;
+  };
+
+var renderedHTML = tmpl(data);
+</code></pre><hr>
+<p>Back to <code>TodoView</code>.</p>
+<p>Backbone doesn&#39;t quite separate the &#39;V&#39; and &#39;C&#39; in MVC. You can see that
+Controller responsibilities are fulfilled in the <code>Backbone.View</code> defined here.
+Its configuration for DOM interactions is managed by the <code>events</code> object, which
+delegates browser events to methods defined in the View.</p>
+<p>With the model and view in place, we can invoke their constructors:</p>
+<pre><code>var todo = new Todo({
+      title: &#39;Lorem ipsum dolor sit amet&#39;,
+      owner: &#39;Adi&#39;
+})
+  , todoView = new TodoView({
+      model: myTodo;
+  });
+
+todoView.render();
+</code></pre><p>Notice that a View is directly tied to a Model (it can also be tied to
+a collection).</p>
+<p>This is the picture of MVC we have now in Backbone.</p>
+<p><img src="http://addyosmani.github.io/backbone-fundamentals/img/backbone_mvc.png" alt="backbone-mvc"></p>
+<p><em>Source</em>: Backbone Fundamentals</p>
+<p>Fairly similar to the server MVC picture, but the View has swallowed the
+Controller and interaction (requests / responses for data) happens through the
+web page DOM.</p>
+<p><em>See the course lecture repository for a simple working Backbone app</em>.</p>
+<p>(Time permitting) Let&#39;s explore
+<a href="http://documentcloud.github.io/backbone/docs/backbone.html">the source</a>!</p>
+<hr>
+<p><strong>References</strong></p>
+<ul>
+<li><a href="http://addyosmani.github.io/backbone-fundamentals/#mvc">Backbone
+Fundamentals</a></li>
+</ul>
 
       </section>
     </div>
