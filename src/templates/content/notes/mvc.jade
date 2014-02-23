@@ -271,16 +271,16 @@
         <span class="owner"><%= owner %>
       </script>
     
-  The method `_.template` will look on the page for such a template wrapped in
-  a `<script>` tag and parse it into a function.
-  
+  The method `_.template` will accept a template string and parse it into a
+  function.
+
       // Returns a string-generating function
-      var tmpl = _.template('item-template')
+      var tmpl = _.template($('#item-template').html())
         , data = {
             title: 'Complete homework 3 by Saturday',
-            owner: 'Tim Miller'
+            owner: 'Joe Student'
           };
-  
+
       var renderedHTML = tmpl(data);
   
   ----------------------

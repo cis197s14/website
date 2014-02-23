@@ -67,8 +67,8 @@ Refer to the <a href="#style">style guide</a> for coding JavaScript.</p>
 <p>hw1, due <strong>Wed, Feb. 5</strong>: <a href="https://github.com/cis197s14/hw/blob/master/hw1/exercises.js">Finger exercises</a>.</p>
 <p>hw2, due <strong>Fri, Feb 14</strong>: <a href="#hw2">XML object modeling</a>.</p>
 <p>hw3, due <strong>Sat, Feb. 22</strong>: <a href="#hw3">Pokémon map building</a>.</p>
-<p>hw4, due <strong>Fri, Feb. 28</strong>: Basic Backbone.js app.</p>
-<p>hw5, due <strong>Wed, March 19</strong>: Intermediate Backbone.js app.</p>
+<p>hw4, due <strong>Sun, March 2</strong>: <a href="#hw4">Map Building v2</a>.</p>
+<p>hw5, due <strong>Fri, March 21</strong>: Intermediate Backbone.js app.</p>
 <p>hw6, due <strong>Wed, April 2</strong>: Advanced Backbone.js app.</p>
 <p>hw7, due <strong>Wed, April 9</strong>: Final project proposal.</p>
 <h2 id="final-project">Final Project</h2>
@@ -2869,13 +2869,13 @@ template in our HTML page, which uses <code>&lt;%= %&gt;</code> as interpolation
   &lt;%= title %&gt;
   &lt;span class=&quot;owner&quot;&gt;&lt;%= owner %&gt;
 &lt;/script&gt;
-</code></pre><p>The method <code>_.template</code> will look on the page for such a template wrapped in
-a <code>&lt;script&gt;</code> tag and parse it into a function.</p>
+</code></pre><p>The method <code>_.template</code> will accept a template string and parse it into a
+function.</p>
 <pre><code>// Returns a string-generating function
-var tmpl = _.template(&#39;item-template&#39;)
+var tmpl = _.template($(&#39;#item-template&#39;).html())
   , data = {
       title: &#39;Complete homework 3 by Saturday&#39;,
-      owner: &#39;Tim Miller&#39;
+      owner: &#39;Joe Student&#39;
   };
 
 var renderedHTML = tmpl(data);
@@ -2911,6 +2911,339 @@ web page DOM.</p>
 <ul>
 <li><a href="http://addyosmani.github.io/backbone-fundamentals/#mvc">Backbone
 Fundamentals</a></li>
+</ul>
+
+      </section>
+      <section class="pure-u-3-4 notes hw4 language-javascript"><h1 id="homework-4-backbone-js-starter">Homework 4: Backbone.js Starter</h1>
+<p>Due <em>Sunday, March 2 at 9 AM</em>.</p>
+<p>Implementation stub available in the
+<a href="https://github.com/cis197s14/hw/blob/master/hw4/">homework repository</a>.</p>
+<h3 id="before-starting-this-assignment">Before starting this assignment</h3>
+<p>Review the <a href="#lectures">lecture 4</a> notes on functional programming,
+Underscore.js, MVC, and Backbone.js. It&#39;s probably also helpful to reference the
+<strong>Fundamentals</strong> and <strong>Backbone Basics</strong> sections of the
+<a href="http://addyosmani.github.io/backbone-fundamentals/"><em>Backbone Fundamentals</em></a>
+book.</p>
+<h2 id="refactoring-map-builder">Refactoring map builder</h2>
+<p><img src="build/images/map-builder.png" alt="map-builder"></p>
+<p>Ah, our old friend, the Pokémon map builder from hw3. In this assignment, we&#39;re
+going to refactor the jQuery-centric code from the last project into a Backbone
+application and also add some functionality. The new app will still have the
+restriction that maps are lost on a page refresh (no persistence), but the code
+will be more structured and modular.</p>
+<p>Here are the essential parts to the map builder, broken down into MVC
+components:</p>
+<ul>
+<li><code>Builder</code> model: singleton that maintains state of the builder and enables
+information sharing between other models.</li>
+<li><code>Player</code> model: represents the player.</li>
+<li><code>PaletteView</code>: represents the palette swatch &amp; enables swatch selection.</li>
+<li><code>BuilderView</code>: represents the map canvas and enables user interaction with the
+map. Also responsible for constructing <code>PaletteView</code>.</li>
+<li><code>PlayerView</code>: represents the player on the map.</li>
+</ul>
+<p><em>Note</em>: Backbone Collections aren&#39;t really necessary for the Map Builder. You
+might consider the map layout as a collection of tiles, but they really
+don&#39;t have much relationship to each other as modeled objects, and so we&#39;ll just
+keep track of tiles as a 2D array in the <code>Builder</code> model.</p>
+<hr>
+<h2 id="backbone-intro">Backbone intro</h2>
+<p>This time around, there&#39;s some starter code provided for you in
+<code>map-builder.js</code>. You&#39;ll also notice some more map tiles to play with in the
+swatches palette!</p>
+<p>Take a look the bottom of the JS file, where the Backbone application is invoked
+within jQuery&#39;s document-ready function.</p>
+<pre><code>var dimensions = {
+      width: 30,
+      height: 10
+},
+    builder = new Builder(dimensions);
+</code></pre><p>When <code>builder</code> is created, the first argument it receives gets parsed as an
+attributes hash. <code>Backbone.Model</code> internally sets all the (key, value) pairs as
+attributes on the model and fills in any <code>defaults</code> if they were defined in
+<code>Builder</code>. However, <code>attributes</code> is an internal storage mechanism for models
+that you shouldn&#39;t touch externally. It&#39;s better to use the getter / setter
+methods:</p>
+<pre><code>builder.get(&#39;width&#39;);     // 30
+builder.get(&#39;height&#39;);    // 10
+
+builder.set(&#39;width&#39;, 20);                   // fires &#39;change:width&#39; event
+builder.set({ width: 20, height: 10 });     // no events fired
+builder.set(&#39;width&#39;, 30, { silent: true }); // no events fired
+</code></pre><p>Models in Backbone communicate asynchronously through events. All
+<code>Backbone.Model</code>s and their extensions have the <code>Backbone.Events</code> mixin. This
+means that you can listen for events on the model like so:</p>
+<pre><code>builder.on(&#39;change:width&#39;, function (builder) {
+  builder.changing;      // true
+  bulder.changed;        // { width: 20 }
+});
+</code></pre><p><em>See <a href="http://documentcloud.github.io/backbone/#Model">Backbone.Model documentation</a>
+for more information</em>.</p>
+<p>To create a <code>BuilderView</code> tied to this model, we have following:</p>
+<pre><code>var builderView = new BuilderView({ model: builder });
+</code></pre><p>Assuming that <code>BuilderView</code> internally manages its placement on the DOM, we can
+invoke its <code>render</code> function to make it appear on the page:</p>
+<pre><code>builderView.render();
+</code></pre><p>Similarly for the <code>Player</code> model and <code>PlayerView</code>, we have the following code:</p>
+<pre><code>var player = new Player({
+      builderModel: builder,
+      dimensions: dimensions
+})
+  , playerView = new PlayerView({ model: player });
+
+playerView.setElement(builderView.$el);
+playerView.render();
+</code></pre><p><code>Player</code> is passed a reference to the <code>builder</code> so that it can know about the
+location of tiles on the map. Also, <code>PlayerView</code> has its containing element set
+to <code>builderView</code>&#39;s element so that it knows where to place itself in the DOM
+upon <code>render</code>.</p>
+<hr>
+<p>Now that we know how the top-level application is structured and how our
+Backbone Models and Views are used, we can go ahead and fill in their
+implementations. But first, a few utility methods will be useful...</p>
+<h3 id="utility-functions">Utility functions</h3>
+<p><strong><em>TODO</em></strong>:</p>
+<ul>
+<li><p>Implement <code>getSwatchName</code> with underscore methods and the chaining syntax
+described in class (its desired functionality is described in
+<code>map-builder.js</code>). <em>Hint</em>: consider using <code>_.difference</code> along with <code>_.first</code>.</p>
+</li>
+<li><p>Implement <code>canvasToPixelUnits</code> to translate between tile units on the canvas
+(the units used by the <code>Builder</code> model for <code>width</code>, <code>height</code>) to pixel units
+on the web page. It&#39;s a simple scaling function using the constant
+<code>TILE_SIZE</code>.</p>
+</li>
+</ul>
+<hr>
+<p>We&#39;re now going to create custom model and view classes. This is done with the
+extend syntax:</p>
+<pre><code>var Builder = Backbone.Model.extend({
+  ...
+});
+</code></pre><p>Each method defined in this custom class has its context bound to the newly
+constructed instance of the class. See the Backbone docs for all the possible
+customization properties / methods.</p>
+<h2 id="models">Models</h2>
+<h4 id="builder">Builder</h4>
+<p><strong><em>TODO</em></strong>:</p>
+<ul>
+<li><p>Implement a <code>generateTiles</code> method and add it to the custom class. It should 
+look at the model&#39;s stored <code>width</code> and <code>height</code> attributes and return a
+two-dimensional matrix corresponding to the map tiles modeled like so:</p>
+<pre><code>[
+  [ { row: 0, col: 0, swatch: &#39;grass&#39; }, { row: 0, col: 1, ...}, ... ],
+  [ { row: 1, col: 0, ...}, ... ],
+  ...
+]
+</code></pre><p>Each tile is represented here by an object that contains its row and column
+position as well as its swatch name (the model&#39;s <code>selectedSwatch</code>
+at the time of construction).
+Also note that this matrix is indexed with row and column numbers in the
+following order: <code>tiles[row][col]</code>. This is important for rendering the canvas
+later.</p>
+<p>Avoid <code>for</code> loops in this implementation. Try using underscore methods like
+<code>_.map</code> and <code>_.range</code>.</p>
+<p><em>Note how <code>generateTiles</code> is invoked</em> in <code>Builder.initialize</code>: the returned
+matrix is stored to the <code>tiles</code> attribute with a setter method.</p>
+</li>
+<li><p>Add a method to the <code>Builder</code> definition called <code>updateTileSwatch</code> that
+updates the tile swatch at a given canvas location to the currently
+selected swatch (necessary for &quot;painting&quot; tiles). It will be called like this:</p>
+<pre><code>builder.updateTileSwatch({
+  row: 4,
+  col: 0
+});
+</code></pre><p><em>Hint</em>: remember that you can&#39;t access the tiles simply with <code>this.tiles</code>,
+rather you must use <code>this.get(&#39;tiles&#39;)</code> and then index into it as a 2D array
+with <code>row</code> and <code>col</code>.</p>
+</li>
+<li><p>Add another method called <code>hasTerrain</code> which is passed two arguments: <code>row</code>
+and <code>col</code>. It should return <code>true</code> if the tile at the given location is
+painted with a <em>terrain swatch</em> and <code>false</code> otherwise. There is an array
+called <code>TERRAIN_SWATCHES</code> available that contains all the swatch names
+that correspond to <em>terrain</em>.</p>
+<p><em>Hint</em>: you may find <code>_.contains</code> helpful here.</p>
+</li>
+</ul>
+<h4 id="player">Player</h4>
+<p>Next, the <code>Player</code> model. It keeps track of where the player is on the canvas
+and its orientation. It also knows about the canvas dimensions (they are passed
+in on instantiation of <code>player</code>). Look at the provided <code>defaults</code> object and the
+arguments passed to <code>new Player(...)</code> to see what this model&#39;s attributes look
+like.</p>
+<p><strong><em>TODO</em></strong>:</p>
+<ul>
+<li>Add methods called <code>moveUp</code>, <code>moveLeft</code>, <code>moveDown</code>, and <code>moveRight</code>. These
+should check if the proposed move is valid (doesn&#39;t go outside the canvas
+dimensions and is walkable terrain, as handily indicated by the <code>isTerrain</code>
+method). If so, they should update the player model&#39;s <code>row</code> or <code>col</code> state as
+well as its <code>orientation</code>.</li>
+</ul>
+<hr>
+<h2 id="views">Views</h2>
+<h4 id="-backbone-view-life-cycle"><code>Backbone.View</code> life cycle</h4>
+<p><em>To review</em>: when a Backbone View is created, a few things happen:</p>
+<ol>
+<li><p>An element is created for the view. It can be customized by supplying options
+(like <code>tagName</code>, <code>className</code>, <code>el</code>, etc.) to <code>Backbone.View.extend</code>, but
+otherwise it&#39;s just a plain <code>&lt;div&gt;</code>. This element is not placed in the DOM
+yet; it only exists in your script.</p>
+</li>
+<li><p>Event handlers defined by the <code>events</code> hash are bound to the view&#39;s element
+using a mechanism similar to jQuery&#39;s <code>delegate</code>.</p>
+</li>
+<li><p>The view&#39;s <code>initialize</code> method, if it exists, is called.</p>
+</li>
+</ol>
+<p>Technically, <em>rendering</em> a view is optional. You could set a view&#39;s element to
+something that already exists in the DOM and the view will attach events
+accordingly. But if you have any nontrivial rendering logic to accomplish (like
+compiling a template), you&#39;ll define and invoke a <code>render</code> method.</p>
+<p><em>Keep in mind</em> that all of the custom view&#39;s defined properties are <strong>computed
+upon script execution</strong>. The document may or may not be &quot;ready&quot; by this time, so
+we&#39;ll ensure that we only call things like jQuery selectors (to grab templates
+on the page) once the view is actually created and initialized.</p>
+<h4 id="templating">Templating</h4>
+<p>Refer to the <a href="#mvc">MVC notes</a> for an introduction to client-side templating.
+Once you have a template function (generated by <code>_.template</code>), you <strong>compile</strong>
+it with a <strong>view context</strong>. A context is simply a JS object representing values
+available to the template. See the
+<a href="http://underscorejs.org/#template">Underscore docs</a> for more info.</p>
+<h4 id="paletteview">PaletteView</h4>
+<p>This view will do the work of the <code>_setupPalette</code> function from HW3.</p>
+<p><strong><em>TODO</em></strong>:</p>
+<ul>
+<li><p>Implement a <code>render</code> method. There is a template function called <code>swatchTmpl</code>
+made available by <code>initialize</code> in the view. It corresponds to this template:</p>
+<pre><code>&lt;li class=&quot;swatch &lt;%= name %&gt;&quot;&gt;&lt;/li&gt;
+</code></pre><p>You&#39;ll need to invoke this template for every swatch (a full list is available
+in a variable in <code>map-builder.js</code> called <code>SWATCHES</code>) and insert the generated
+HTML string into the DOM so that the palette swatches show up like so:</p>
+<pre><code>&lt;div class=&quot;palette&quot;&gt;
+  &lt;ul&gt;
+    &lt;li class=&quot;swatch grass&quot;&gt;&lt;/li&gt;
+    &lt;li class=&quot;swatch flowers-red&quot;&gt;&lt;/li&gt;
+    ...
+  &lt;/ul&gt;
+&lt;/div&gt;
+</code></pre><p>In <code>BuilderView</code>, we&#39;re going to set the constructed <code>PaletteView</code>&#39;s element
+to the <code>.palette</code> element, so you can assume <code>this.$el</code> points to the
+<code>&lt;div class=&quot;palette&quot;&gt;</code> in the above snippet. See
+<a href="http://documentcloud.github.io/backbone/#View-dollar">this feature</a> of
+Backbone to learn about selecting elements within views. Finally, it is
+customary to return <code>this</code> at the end of <code>render</code> for chaining purposes.</p>
+<p><em>Hint</em>: Try using <code>_.map</code> when compiling the swatch templates. Also,
+<code>Array.prototype.join</code> is useful for concatenating a list of strings together.</p>
+</li>
+<li><p>Add an event listener for swatch clicks by specifying the <code>events</code> hash and
+relevant handler function in the view. See the
+<a href="http://documentcloud.github.io/backbone/#View-delegateEvents">events docs</a>
+for the appropriate syntax. Note that event handlers delegated in this way get
+their <code>this</code> context bound to the current view, <em>not the event target</em> as you
+might be used to from jQuery. Keep this in mind when adapting your hw3 code
+from <code>_setupPalette</code>.</p>
+<p>To keep track of the selected swatch state, you should set the
+<code>selectedSwatch</code> attribute on the <code>Builder</code> model (this model is accessible in
+<code>PaletteView</code> as simply <code>this.model</code>).</p>
+</li>
+</ul>
+<h4 id="builderview">BuilderView</h4>
+<p>There is some starter code here which gets template functions for you.
+We don&#39;t really need a template for this view since it&#39;s all static
+markup. We do, however, need a template for the canvas &quot;sub-view&quot;.</p>
+<p><strong><em>TODO</em></strong>:</p>
+<ul>
+<li><p>Define &amp; implement <code>_renderPalette</code> (it&#39;s invoked within <code>render</code>). Construct
+a new <code>PaletteView</code> and give it a reference to <code>BuilderView</code>&#39;s model (it&#39;s OK
+for two views to act on the same model).
+<a href="http://documentcloud.github.io/backbone/#View-setElement">Set the new view&#39;s element</a>
+to the element passed into <code>_renderPalette</code>. Finally, render the new view.</p>
+</li>
+<li><p>Define &amp; implement <code>_renderCanvas</code>. This should simply use the saved
+<code>canvasTmpl</code> to render canvas tiles into the element passed as an argument.
+If you have set up the <code>Builder</code> model right, you simply need to provide
+<code>this.model.toJSON()</code> as context for the template. <code>canvas-template</code> has
+markup to generate rows and columns from the JSON representation of the model:</p>
+<pre><code>&lt;% _.each(tiles, function (row) { %&gt;
+  &lt;div class=&quot;row&quot;&gt;
+
+  &lt;% _.each(row, function (tile) { %&gt;
+    &lt;div class=&quot;tile swatch &lt;%= tile.swatch %&gt;&quot; data-row=&quot;&lt;%= tile.row %&gt;&quot; data-col=&quot;&lt;%= tile.col %&gt;&quot;&gt;&lt;/div&gt;
+  &lt;% }); %&gt;
+
+  &lt;/div&gt;
+&lt;% }); %&gt;
+</code></pre></li>
+<li><p>Define <code>events</code> and their associated handlers in this view. These are the
+tile <code>mousedown</code>, <code>mouseout</code>, and <code>mouseenter</code> events from <code>_setupCanvas</code> in
+hw3 that allow you to preview and paint tiles. You should simply be adapting
+that code to fit the Backbone event system (again, keep in mind the <em>context</em>
+each event handler is invoked with). There ought to be one additional bit of
+logic in the <code>mousedown</code> handler that notifies the <code>Builder</code> model of
+a painted swatch (remember the <code>updateTileSwatch</code> method we implemented
+earlier?). <em>This is crucial to allow the <code>Player</code> model to know about the
+locations of map tiles</em>.</p>
+</li>
+</ul>
+<h4 id="playerview">PlayerView</h4>
+<p>This view will display Pikachu on the map canvas and update its position in
+response to user interaction (keypresses). We&#39;ll use a library called
+<a href="http://craig.is/killing/mice">Mousetrap</a> so that we have a simple API for
+binding key-based event handlers.</p>
+<p><strong><em>TODO</em></strong>:</p>
+<ul>
+<li><p>First implement a <code>render</code> method to draw the player in the canvas. 
+We&#39;re able to move the player around the map using CSS absolute positioning.
+Here, <code>this.tmpl</code> is a reference to the template:</p>
+<pre><code>&lt;div class=&quot;player facing-&lt;%= orientation %&gt;&quot; style=&quot;top: &lt;%= top %&gt;px; left: &lt;%= left %&gt;px&quot;&gt;&lt;/div&gt;
+</code></pre><p>It expects a context with <code>top</code>, <code>left</code>, and <code>orientation</code> values available.
+The player model keeps track of <code>orientation</code>, but to get <code>top</code> and <code>left</code>
+pixel values, you&#39;ll have to use the <code>canvasToPixelUnits</code> utility defined
+earlier.</p>
+<p>Once you&#39;ve compiled the template into a string, use jQuery&#39;s <code>.prepend</code> to
+place the player as the first child of <code>this.$el</code>. The page will then have
+something like:</p>
+<pre><code>&lt;div id=&quot;map-builder&quot;&gt;
+  &lt;div class=&quot;player facing-right&quot; style=&quot;top: 0px; left: 0px&quot;&gt;&lt;/div&gt;
+  &lt;div class=&quot;canvas&quot;&gt;...&lt;/div&gt;
+  &lt;hr/&gt;
+  &lt;div class=&quot;palette&quot;&gt;...&lt;/div&gt;
+&lt;/div&gt;
+</code></pre></li>
+<li><p>Define &amp; implement a method to bind keypress listeners to the document using
+the <a href="http://craig.is/killing/mice">Mousetrap</a> library.
+Keypresses (in particular, &#39;keydown&#39;) on <code>W</code>, <code>A</code>, <code>S</code>, and <code>D</code>
+should correspond to the <code>Player</code> model&#39;s <code>moveUp</code>, <code>moveLeft</code>, <code>moveDown</code>,
+and <code>moveRight</code> actions. This new event-binding method should be called in
+<code>render</code>.</p>
+</li>
+<li><p>Here&#39;s the interesting reactive part -- in <code>initialize</code>, add some code to tell
+the <code>PlayerView</code> to listen for <code>change:row</code> and <code>change:col</code> events on the
+<code>Player</code> model. When these events occur, the <code>PlayerView</code> should be
+re-rendered. Again, see the
+<a href="http://documentcloud.github.io/backbone/#Events-on">Events docs</a> for help.</p>
+<p>This step also requires you to edit <code>render</code> to add logic that destroys the
+<code>.player</code> element if it already exists on the page (we don&#39;t want multiple
+Pikachus to be displayed).</p>
+<p><em>Note</em>: with <code>render</code> being invoked many times in this manner, you&#39;ll notice
+that we&#39;re repeatedly binding keypress listeners on the page; your application
+might even start to run slowly! To avoid this, use Underscore&#39;s <code>once</code> method to
+ensure that keypress listeners are only ever bound once.</p>
+</li>
+</ul>
+<hr>
+<p>That&#39;s it! At this point you should have an editable canvas of map tiles and
+a playable Pikachu character that moves around with WASD controls. I encourage
+you to thoroughly explore the
+<a href="http://documentcloud.github.io/backbone">Backbone docs</a> to get a handle on how
+the library is used to build a simple app like this.</p>
+<p><img src="build/images/gifs/player-moving.gif" alt="player-moving"></p>
+<h3 id="notes">Notes</h3>
+<ul>
+<li>Please remove &quot;TODO&quot; comments from the code when you complete implementing
+those parts of the application.</li>
+<li>Check out the Chrome DevTools docs / tutorials on
+<a href="https://developers.google.com/chrome-developer-tools/docs/javascript-debugging">JavaScript debugging</a>.</li>
 </ul>
 
       </section>
