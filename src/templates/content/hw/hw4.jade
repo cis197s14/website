@@ -25,12 +25,12 @@
   restriction that maps are lost on a page refresh (no persistence), but the code
   will be more structured and modular.
   
-  Here are the essential parts to the map builder, broken down into MVC
+  Here are the essential parts to map builder v2, broken down into MVC
   components:
   
   * `Builder` model: singleton that maintains state of the builder and enables
     information sharing between other models.
-  * `Player` model: represents the player.
+  * `Player` model: keeps track of player position and orientation.
   * `PaletteView`: represents the palette swatch & enables swatch selection.
   * `BuilderView`: represents the map canvas and enables user interaction with the
     map. Also responsible for constructing `PaletteView`.

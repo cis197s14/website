@@ -171,15 +171,18 @@ available in April.</p>
               <td>2/26</td>
               <td>
                 A deeper dive into Backbone.js <br/>
-                AJAX requests, JSON data <br/>
-                RESTful applications, routing
+                AJAX requests, RESTful applications <br/>
+                Model persistence, Routing
               </td>
               <td>DBA: RESTful Persistence, Events, Routers</td>
             </tr>
             <tr>
               <td>7</td>
               <td>3/5</td>
-              <td>Introduction to Node.js <br/></td>
+              <td>
+                Module systems <br/>
+                Writing a web server in Node.js <br/>
+              </td>
               <td>Node Beginner Book</td>
             </tr>
             <tr>
@@ -202,7 +205,7 @@ available in April.</p>
               <td>3/26</td>
               <td>
                 Best practices for client-side apps <br/>
-                Backbone.js extentions (MarionetteJS) <br/>
+                Backbone.js extensions (MarionetteJS) <br/>
                 Common problems &amp; solutions
               </td>
               <td>
@@ -233,8 +236,8 @@ available in April.</p>
               <td>12</td>
               <td>4/16</td>
               <td>
-                Introduction to other client-side frameworks <br/>
-                (AngularJS, Ember, React)
+                Reactive frameworks & libraries <br/>
+                (AngularJS, Ember, React, Meteor)
               </td>
               <td></td>
             </tr>
@@ -2931,12 +2934,12 @@ going to refactor the jQuery-centric code from the last project into a Backbone
 application and also add some functionality. The new app will still have the
 restriction that maps are lost on a page refresh (no persistence), but the code
 will be more structured and modular.</p>
-<p>Here are the essential parts to the map builder, broken down into MVC
+<p>Here are the essential parts to map builder v2, broken down into MVC
 components:</p>
 <ul>
 <li><code>Builder</code> model: singleton that maintains state of the builder and enables
 information sharing between other models.</li>
-<li><code>Player</code> model: represents the player.</li>
+<li><code>Player</code> model: keeps track of player position and orientation.</li>
 <li><code>PaletteView</code>: represents the palette swatch &amp; enables swatch selection.</li>
 <li><code>BuilderView</code>: represents the map canvas and enables user interaction with the
 map. Also responsible for constructing <code>PaletteView</code>.</li>
