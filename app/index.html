@@ -67,8 +67,8 @@ Refer to the <a href="#style">style guide</a> for coding JavaScript.</p>
 <p>hw1, due <strong>Wed, Feb. 5</strong>: <a href="https://github.com/cis197s14/hw/blob/master/hw1/exercises.js">Finger exercises</a>.</p>
 <p>hw2, due <strong>Fri, Feb 14</strong>: <a href="#hw2">XML object modeling</a>.</p>
 <p>hw3, due <strong>Sat, Feb. 22</strong>: <a href="#hw3">Pokémon map building</a>.</p>
-<p>hw4, due <strong>Sun, March 2</strong>: <a href="#hw4">Map Building v2</a>.</p>
-<p>hw5, due <strong>Fri, March 21</strong>: Intermediate Backbone.js app.</p>
+<p>hw4, due <strong>Sun, March 2</strong>: <a href="#hw4">Backbone.js starter</a>.</p>
+<p>hw5, due <strong>Sun, March 23</strong>: <a href="#hw5">Intermediate Backbone.js app</a>.</p>
 <p>hw6, due <strong>Wed, April 2</strong>: Advanced Backbone.js app.</p>
 <p>hw7, due <strong>Wed, April 9</strong>: Final project proposal.</p>
 <h2 id="final-project">Final Project</h2>
@@ -3637,6 +3637,160 @@ req.end();
 <li><a href="http://addyosmani.github.io/backbone-fundamentals/#creating-the-back-end">Backbone Fundamentals</a></li>
 <li><a href="http://docs.nodejitsu.com/articles">Nodejitsu Articles</a></li>
 </ul>
+
+      </section>
+      <section class="pure-u-3-4 notes hw5 language-javascript"><h1 id="homework-5-playing-pok-mon">Homework 5: Playing Pokémon</h1>
+<p>This assignment will extend your Backbone.js experience to include topics we&#39;ve
+recently covered in class:</p>
+<ul>
+<li>Backbone routing</li>
+<li>Model persistence</li>
+</ul>
+<p>Here&#39;s a general outline of the new functionality we&#39;re adding to the Pokémon
+game:</p>
+<ul>
+<li>Separate game modes: map building and playing the game</li>
+<li>Larger map building area &amp; smaller visible map</li>
+<li>URL routes point to map regions</li>
+<li>Persistent map to local storage</li>
+</ul>
+<h3 id="before-starting-this-assignment">Before starting this assignment</h3>
+<p>Review the <a href="http://backbonejs.org/">documentation</a> on Backbone&#39;s Router and
+<a href="https://github.com/cis197s14/lectures/tree/master/lecture-5">these code samples</a>
+from lecture.</p>
+<p>When you download the implementation stub to your hw repo, please <strong>push that
+commit to the target branch</strong> for the HW pull request you will make later.
+Then you can work on the assignment and add commits. By doing this, your PR
+won&#39;t be cluttered by static binary files and code that you didn&#39;t write.
+Thanks!</p>
+<h3 id="application-structure">Application Structure</h3>
+<p>Our code is starting to get a little complicated and disparate for one file, so
+we&#39;re going to split it up and move all scripts to a <code>app/</code> directory. Take
+a look at <code>index.html</code>. To share information between our scripts, we&#39;ll use a
+global object called <code>POKEMON</code>, which is declared and initialized in
+<code>index.html</code> before all of our application scripts. (There are better ways to do
+this, including dependency injection and requireJS modules, but for now we&#39;ll
+stick to basic script loading.)</p>
+<ul>
+<li><code>app/utils.js</code> is loaded first; it contains global variables and utility
+functions.</li>
+<li><code>app/builder.js</code> contains the <code>Builder</code> model and <code>PaletteView</code>
+&amp; <code>BuilderView</code>.</li>
+<li><code>app/player.js</code> contains the <code>Player</code> model and <code>PlayerView</code>.</li>
+<li><code>app/map.js</code> contains a <code>MapView</code>, which will be used for the &quot;playing&quot; game
+mode.</li>
+<li><code>app/pokemon.js</code> is a stub for the overall application. It is loaded last
+because it depends on everything else (models, views, etc.) being available.</li>
+</ul>
+<p><strong><code>Builder</code>, <code>PaletteView</code>, and <code>BuilderView</code></strong> functionality (up to hw4) is
+provided for you already in <code>app/builder.js</code>. One difference in rendering you
+might notice from hw4 is that a new <code>&lt;div&gt;</code> is created for <code>BuilderView</code> rather
+than attaching to the existing <code>#map</code> element on the page (explicitly setting
+the view&#39;s <code>el</code>). This is necessary for removing / re-rendering of views that
+occurs when switching game modes. </p>
+<p><strong><code>Player</code> and <code>PlayerView</code></strong> are left blank in <code>app/player.js</code> -- you should copy
+over your code from hw4 to use as a implementation stub. Try to update your code
+to use the global variables from <code>POKEMON.globals</code>. In addition, for the
+same reason as above for <code>BuilderView</code>, if you were <em>explicitly setting</em>
+<code>PlayerView</code>&#39;s element in your implementation, you&#39;ll likely need to edit your
+code to instead rely on Backbone&#39;s internally created <code>el</code>.</p>
+<p><em>Note</em>: if you are lacking working hw4 code for this portion, please email the
+TAs.</p>
+<p><strong><code>app/pokemon.js</code></strong> contains code to initialize models and start off a custom
+Backbone router.</p>
+<hr>
+<h2 id="separate-game-modes">Separate Game Modes</h2>
+<p>If you open up <code>index.html</code>, you&#39;ll notice a few controls available at the top
+right of the page: <strong>Build</strong>, <strong>Play</strong>, and <strong>Reset</strong>. We&#39;ll use url routes to
+invoke all these actions, so these controls simply point to different routes
+(<code>#build</code>, <code>#play</code>, <code>#reset</code>).</p>
+<p><strong><em>TODO</em></strong>: Create a <code>&#39;build&#39;</code> route in <code>pokemon.js</code>. Its handler should
+construct a new <code>BuilderView</code> (but <em>only if it doesn&#39;t exist already</em>).
+<code>render</code> the view and call <code>delegateEvents</code> to re-bind event handlers. Remember
+that you&#39;ll need to wait until DOM ready to construct any views. All the
+necessary models you need are already available here.</p>
+<p><strong><em>TODO</em></strong>: Create a <code>&#39;play&#39;</code> route whose handler constructs a new <code>MapView</code> and
+a new <code>PlayerView</code> if they don&#39;t exist. Render these views and delegate their
+events. Be sure to set the <code>playerView</code>&#39;s element to that of the <code>mapView</code> (this
+is the same as in hw4).</p>
+<p><em>Note</em>: Reference the hw4 implementation stub if you need help constructing
+these views.</p>
+<p><strong><em>TODO</em></strong>: Revisit both of these route handlers to ensure that the old view
+is destroyed when the game mode is switched. For example, when the <code>build</code> route
+is hit, you should <strong>undo</strong> the work of <code>render</code> and <code>delegateEvents</code> by calling
+<code>undelegateEvents</code> and <code>remove</code> (in that order) on <strong>both</strong> <code>mapView</code> and
+<code>playerView</code>.</p>
+<p><img src="build/images/gifs/game-modes.gif" alt="game-modes"></p>
+<p>Although <code>MapView</code> isn&#39;t implemented completely, you should be able to switch
+game modes at this point between the map builder and an empty map playing view
+(using the controls at the top right).</p>
+<hr>
+<h2 id="visible-map-area">Visible Map Area</h2>
+<p>In &quot;play&quot; mode, we&#39;re only going to expose a small portion of the map
+(of width &amp; height equal to <code>POKEMON.globals.MAP_SIZE</code>) to emulate a
+handheld-like game experience.</p>
+<p><img src="build/images/gifs/build-play.gif" alt="build-play"></p>
+<p>The coordinates of the top-left corner of the
+visible map area will be encoded in the url; the route will now look something
+like the following (it represents row 5 and column 8):</p>
+<pre><code>play/r5/c8
+</code></pre><p><em>Hint</em>: take a look at the lecture 5 code to see how to define route parameters
+like this.</p>
+<p><strong><em>TODO</em></strong>: Once you define this route and parse the row and column in its
+handler, you&#39;ll need to decide how to make <code>MapView</code> <strong>only show the relevant
+slice of the map</strong> (<em>hint</em>: <code>MapView</code>&#39;s model is the same as the <code>Builder</code>
+model, so have access to the whole tiles array). There are edge cases that need
+to be handled as well, as you can see in the above demonstration.</p>
+<p><strong><em>TODO</em></strong>: When the player reaches the edge of the visible map, make the
+application re-route to shift the visible map area (this will force your views
+to be rebuilt). For example, if the current route is <code>play/r0/c0</code> and Pikachu
+just tried to move to the tile at row 0, col 10,
+you might want to shift the map to <code>play/r0/c2</code>. You should do this using
+Backbone&#39;s <code>router.navigate</code>
+(<a href="http://documentcloud.github.io/backbone/#Router-navigate">docs</a>).
+Be sure to pass in the appropriate options for <code>trigger</code> and <code>replace</code> to this
+function.</p>
+<p>This is the tricky part of the whole assignment, especially the edge
+cases. One strategy is to let the <code>Player</code> model know about the visible
+map area and have it re-route under certain conditions in its moving functions.</p>
+<hr>
+<p><strong><em>TODO</em></strong>: Go back to the <code>play</code> route handler you defined earlier. Make it
+re-route the application (using <code>navigate</code>) to a map slice centered on the
+player&#39;s current position (of the form <code>play/r0/c0</code>).</p>
+<p><strong><em>Extra Credit</em></strong> (3pts): create a minimap next to the regular map that shows
+you where you are in relation to the whole map (only in &quot;play&quot; mode).</p>
+<hr>
+<h2 id="map-persistence">Map Persistence</h2>
+<p>To persist the state of the map tiles, we&#39;ll use remarkably simple
+<code>localStorage</code> API. This is an HTML5 feature that stores information in the
+browser to use between sessions. It is a global object available as
+<code>window.localStorage</code> that has special getter / setter semantics, but a simple
+syntax that works just like objects.</p>
+<pre><code>localStorage[&#39;foo&#39;] = &#39;bar&#39;;
+
+console.log(localStorage[&#39;foo&#39;]); // &#39;bar&#39;;
+</code></pre><p>The one disadvantage is that it can only store strings, so to <em>store</em> any
+array-like or object-like data, you&#39;ll need to use the built-in <code>JSON.stringify</code>
+(and <code>JSON.parse</code> to complement this when <em>retrieving</em> data).</p>
+<p><strong><em>TODO</em></strong>: Edit the definition of the <code>Builder</code> model to save the current map
+tiles to localStorage whenever the tiles change using Model events. Use the
+global constant <code>POKEMON.globals.LOCALSTORAGE_KEY</code> to index into the
+<code>localStorage</code> object. In addition, edit this model&#39;s <code>initialize</code> method to
+parse stored tiles from localStorage if they are available (or fall back to
+generating new ones).</p>
+<p>Now when you reload your web page, the map tiles should stay in place! Magic!</p>
+<p><img src="build/images/gifs/map-persistence.gif" alt="map-persistence"></p>
+<p><strong><em>TODO</em></strong>: Add a method to <code>Builder</code> that resets all the map tiles to the default
+swatch (essentially erases the whole map). Then, add a Backbone route handler
+for the route <code>&#39;reset&#39;</code> that invokes this function. If you implement this
+correctly, the map should reset when you click &quot;Reset&quot; in the controls on the
+top right of the page.</p>
+<hr>
+<h3 id="notes">Notes</h3>
+<p>If you find yourself spending an inordinate amount of time on this assignment,
+please seek help on Piazza, in office hours, or by appointment. </p>
+<p>Your final output should function like the demo gif under the &quot;Visible Map Area&quot;
+heading above.</p>
 
       </section>
     </div>
