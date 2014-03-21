@@ -3732,9 +3732,9 @@ like the following (it represents row 5 and column 8):</p>
 like this.</p>
 <p><strong><em>TODO</em></strong>: Once you define this route and parse the row and column in its
 handler, you&#39;ll need to decide how to make <code>MapView</code> <strong>only show the relevant
-slice of the map</strong> (<em>hint</em>: <code>MapView</code>&#39;s model is the same as the <code>Builder</code>
-model, so have access to the whole tiles array). There are edge cases that need
-to be handled as well, as you can see in the above demonstration.</p>
+slice of the map</strong> (<em>Hint</em>: you may want to make <code>MapView</code>&#39;s model point to
+the <code>Builder</code> model when that view is constructed). There are edge cases that
+need to be handled as well, as you can see in the above demonstration.</p>
 <p><strong><em>TODO</em></strong>: When the player reaches the edge of the visible map, make the
 application re-route to shift the visible map area (this will force your views
 to be rebuilt). For example, if the current route is <code>play/r0/c0</code> and Pikachu
