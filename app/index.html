@@ -197,19 +197,15 @@ available in April.</p>
             <tr>
               <td>8</td>
               <td>3/19</td>
-              <td>
-                Creating an entire web application in JS <br/>
-                (Backbone.js + Node.js + MongoDB)
-              </td>
+              <td>Express framework for Node</td>
               <td>DBA: Exercise 2</td>
             </tr>
             <tr>
               <td>9</td>
               <td>3/26</td>
               <td>
-                Best practices for client-side apps <br/>
-                Backbone.js extensions (MarionetteJS) <br/>
-                Common problems &amp; solutions
+                Client side routing <br/>
+                Backbone.js extensions (MarionetteJS)
               </td>
               <td>
                 Eloquent JS Chapter 9 <br/>
@@ -221,17 +217,8 @@ available in April.</p>
               <td>10</td>
               <td>4/2</td>
               <td>
-                HTML5 features <br/>
-                (Canvas, local storage, audio/video, app cache, offline)
-              </td>
-              <td></td>
-            </tr>
-            <tr>
-              <td>11</td>
-              <td>4/9</td>
-              <td>
-                Debugging front end performance <br/>
-                Build systems &amp; tools
+                Streams, Promises, Generators <br/>
+                Debugging JavaScript performance
               </td>
               <td></td>
             </tr>
@@ -240,14 +227,23 @@ available in April.</p>
               <td>4/16</td>
               <td>
                 Reactive frameworks & libraries <br/>
-                (AngularJS, Ember, React, Meteor)
+                WebSockets
+              </td>
+              <td></td>
+            </tr>
+            <tr>
+              <td>11</td>
+              <td>4/9</td>
+              <td>
+                Build systems &amp; tools <br/>
+                Testing
               </td>
               <td></td>
             </tr>
             <tr>
               <td>13</td>
               <td>4/23</td>
-              <td><em>Special Topics</em>: WebSockets</td>
+              <td><em>Special Topics</em>: Data visualization with D3.js</td>
               <td>
                 <a href="https://developer.mozilla.org/en-US/docs/WebSockets">
                   [MDN] WebSockets
@@ -3661,11 +3657,6 @@ game:</p>
 <p>Review the <a href="http://backbonejs.org/">documentation</a> on Backbone&#39;s Router and
 <a href="https://github.com/cis197s14/lectures/tree/master/lecture-5">these code samples</a>
 from lecture.</p>
-<p>When you download the implementation stub to your hw repo, please <strong>push that
-commit to the target branch</strong> for the HW pull request you will make later.
-Then you can work on the assignment and add commits. By doing this, your PR
-won&#39;t be cluttered by static binary files and code that you didn&#39;t write.
-Thanks!</p>
 <h3 id="application-structure">Application Structure</h3>
 <p>Our code is starting to get a little complicated and disparate for one file, so
 we&#39;re going to split it up and move all scripts to a <code>app/</code> directory. Take
@@ -3794,6 +3785,317 @@ top right of the page.</p>
 please seek help on Piazza, in office hours, or by appointment. </p>
 <p>Your final output should function like the demo gif under the &quot;Visible Map Area&quot;
 heading above.</p>
+
+      </section>
+      <section class="pure-u-3-4 notes server-js-2 language-javascript"><h1 id="more-server-side-javascript">More Server-Side JavaScript</h1>
+<p><a href="#server-js">Last lecture</a>, we talked about the building blocks of a web server
+in JavaScript. This time, we&#39;ll look into request routing, the Express
+framework for Node, and stringing the JavaScript web application stack together.</p>
+<h2 id="routing-requests">Routing requests</h2>
+<p>Recall the server-side MVC diagram.</p>
+<p><img src="http://addyosmani.github.io/backbone-fundamentals/img/webmvcflow_bacic.png" alt="server mvc"></p>
+<p>Some kind of URL parsing is certainly necessary to route web requests to various
+controller actions / handlers. You might use functions like the following to
+inspect parts of the URL and query string (using only core modules):</p>
+<pre><code>                                    url.parse(string).query
+                                            |
+</code></pre><p>url.parse(string).pathname      |
+                            |                   |
+                            |                   |</p>
+<hr>
+<pre><code>http://localhost:8888/start?foo=bar&amp;hello=world
+                                ---       -----
+                                 |          |
+                                 |          |
+querystring(string)[&quot;foo&quot;]    |
+                                            |
+querystring(string)[&quot;hello&quot;]
+</code></pre><p><em>Source: Node Beginner Book</em></p>
+<p>You can imagine how we might program our server to send requests for certain
+pathnames to different handlers and pass along relevant data (for example, from
+the query string).</p>
+<p>Now consider a RESTful route like this example we saw a few weeks ago:</p>
+<pre><code>/:year/:month/:day/:section/:subsection/:story.html
+</code></pre><p><em>Prompt</em>: how would you parse out the relevant bits of data here? Imagine you got
+a URL looking like</p>
+<pre><code>http://www.nytimes.com/2014/03/05/movies/awardsseason/some-long-story-name.html
+</code></pre><p><em>Answer</em>: One way would be to construct some regular expressions from the route
+definition above and use them to match on the incoming URL
+request route.</p>
+<p>With the fundamentals of server-side JS under our belt, we can move onto what
+it&#39;s like to build a real web application in Node. As was the case with the DOM
+API, you will likely use some kind of abstraction layer to build your web
+application...</p>
+<hr>
+<h2 id="express-js-framework">Express.js framework</h2>
+<p>As you might expect from something called a &quot;framework&quot;, Express is an
+abstraction over the fundamental web server logic in a Node application.
+It&#39;s small, flexible, extensible, and widely used. Mainly, it provides common
+HTTP utilities (like a robust router) and <em>middleware</em> APIs (sessions, cookies,
+auth, etc.).</p>
+<p>The most basic Express server looks something like this:</p>
+<pre><code>var express = require(&#39;express&#39;);
+
+// create an app skeleton
+var app = express();
+
+// register a route &amp; its handler
+app.get(&#39;/hello&#39;, function (req, res) {
+  res.send(&#39;Hello World&#39;);
+});
+
+// asynchronously start the server
+var server = app.listen(3000);
+console.log(&#39;Express app listening on port %d&#39;, server.address().port);
+</code></pre><p>Requests are routed using functions that mirror the HTTP method names (in the
+above example, a <code>GET</code> method). There are no &quot;controllers&quot; built in, but you may
+easily create your own.
+If we add in some standard <strong>middleware</strong> (a term broadly used to define plugins
+for a web framework) and move routes to a separate module, we get something
+like this:</p>
+<pre><code>var express = require(&#39;express&#39;)
+  , app     = express()
+  , routes  = require(&#39;./routes&#39;);
+
+// Config
+// ----------------------------------------------------
+
+// View engine
+app.set(&#39;view engine&#39;, &#39;jade&#39;);
+app.set(&#39;views&#39;, __dirname + &#39;/views&#39;);
+
+// Logger
+app.use(express.logger());
+
+// Get / set user cookies
+app.use(express.cookieParser());
+
+// Enable JSON, urlencoded, and multipart request bodies
+app.use(express.bodyParser());
+
+// Serve static files
+app.use(express.directory(__dirname + &#39;/public&#39;));
+app.use(express.static(__dirname + &#39;/public&#39;));
+
+
+// Routes
+// ----------------------------------------------------
+
+app.get(&#39;/&#39;, routes.site.index);
+
+
+// User routes
+
+app.all(&#39;/users&#39;,         routes.users.list);
+app.all(&#39;/user/:id/:op?&#39;, routes.users.load);
+
+app.get(&#39;/user/:id&#39;,      routes.users.view);
+app.get(&#39;/user/:id/view&#39;, routes.users.view);
+app.get(&#39;/user/:id/edit&#39;, routes.users.edit);
+app.put(&#39;/user/:id/edit&#39;, routes.users.update);
+
+// Posts routes
+
+app.get(&#39;/posts&#39;,         routes.posts.list);
+
+
+// Start server
+// ----------------------------------------------------
+var server = app.listen(3000);
+console.log(&#39;Express app listening on port %d&#39;, server.address().port);
+</code></pre><p>A few new things are introduced here:</p>
+<ul>
+<li>a <strong>view engine</strong> is set, in this case Jade, which enables <code>res.render()</code> to
+render HTML pages in responses</li>
+<li><code>express.cookieParser()</code>: enables getting / setting cookies</li>
+<li><code>express.bodyParser()</code>: enables parsing of request bodies including <code>json</code>,
+<code>urlencoded</code>, and <code>multipart</code> middleware (it&#39;s actually just a wrapper for
+those three modules)</li>
+<li><code>express.directory</code> &amp; <code>express.static</code>: serve directories and their files;
+essentially a file browser</li>
+</ul>
+<p>There&#39;s also another kind of routing function in use with <code>app.all</code>, which
+attaches &quot;global&quot; logic to a route. In this case, if we ever hit a route which
+pertains to a specific user, the first handler that gets run will be
+<code>router.user.load</code> (presumably, fetch a user&#39;s data from the database, or
+a handle for it).</p>
+<p>An alternative way to organize routes might be like
+<a href="https://github.com/visionmedia/express/blob/master/examples/route-map/index.js">this</a>:</p>
+<pre><code>app.map = function (a, route) {
+  route = route || &#39;&#39;;
+
+  for (var key in a) {
+    switch (typeof a[key]) {
+
+      // { &#39;/path&#39;: {...} }
+      case &#39;object&#39;:
+        app.map(a[key], route + key);
+        break;
+
+      // get: function () {...}
+      case &#39;function&#39;:
+        if (verbose) console.log(&#39;%s %s&#39;, key, route);
+        app[key](route, a[key]);
+        break;
+
+    }
+  }
+};
+
+app.map({
+  &#39;/users&#39;: {
+    get:          routes.users.list,
+    del:          routes.users.del,
+
+    &#39;/:uid&#39;: {
+      get:        routes.users.get,
+
+      &#39;/pets&#39;: {
+        get:      routes.pets.list,
+
+        &#39;/:pid&#39;: {
+          del:    routes.pets.del
+        }
+      }
+    }
+  }
+});
+</code></pre><p>The above example abstracts away the route mapping functions so you can simply
+provide a literal map (object) of routes.</p>
+<p><em>Note</em>: If in your application you ever need to inspect / reflect upon your
+currently defined routes, simply look at the <code>app.routes</code> object.</p>
+<p>Middleware isn&#39;t just restricted to framework plugins; there&#39;s such
+a thing as <em>route middleware</em>, which act like a chained series of actions on
+a route. Notice how errors are passed along the middleware chain as necessary.</p>
+<pre><code>// Dummy users
+var users = [
+    { uid: 0, name: &#39;tj&#39;, email: &#39;tj@vision-media.ca&#39;, role: &#39;member&#39; }
+, { uid: 1, name: &#39;ciaran&#39;, email: &#39;ciaranj@gmail.com&#39;, role: &#39;member&#39; }
+  , { uid: 2, name: &#39;aaron&#39;, email: &#39;aaron.heckmann+github@gmail.com&#39;, role: &#39;admin&#39; }
+];
+
+// Middleware
+// --------------------------------------------------------
+
+function fauxAuthentication (req, res, next) {
+  req.authenticatedUser = users[0];
+  next();
+}
+
+app.use(fauxAuthentication);
+
+
+// Routes middleware
+// --------------------------------------------------------
+
+function loadUser (req, res, next) {
+  // You would fetch your user from the db
+  var user = users[req.params.uid];
+  if (user) {
+    req.user = user;
+    next();
+  } else {
+    next(new Error(&#39;Failed to load user &#39; + req.params.id));
+  }
+}
+
+function andRestrictToSelf (req, res, next) {
+  // If our authenticated user is the user we are viewing
+  // then everything is fine
+  if (req.authenticatedUser.uid == req.user.uid) {
+    next();
+  } else {
+    next(new Error(&#39;Unauthorized&#39;));
+  }
+}
+
+function andRestrictTo (role) {
+  return function(req, res, next) {
+    if (req.authenticatedUser.role === role) {
+      next();
+    } else {
+      next(new Error(&#39;Unauthorized&#39;));
+    }
+  }
+}
+
+// Routes
+// --------------------------------------------------------
+
+app.get(&#39;/&#39;, function (req, res) {
+  res.redirect(&#39;/user/0&#39;);
+});
+
+app.get(&#39;/user/:id&#39;, loadUser, function (req, res) {
+  res.send(&#39;Viewing user &#39; + req.user.name);
+});
+
+app.get(&#39;/user/:id/edit&#39;, loadUser, andRestrictToSelf, function (req, res) {
+  res.send(&#39;Editing user &#39; + req.user.name);
+});
+
+app.del(&#39;/user/:id&#39;, loadUser, andRestrictTo(&#39;admin&#39;), function (req, res) {
+  res.send(&#39;Deleted user &#39; + req.user.name);
+});
+</code></pre><p>Another way to configure the above user loading is to use <code>app.param</code>, which
+maps logic to URL parameters. In the below example, any time <code>:user</code> shows up in
+an Express route, the callback will be invoked.</p>
+<pre><code>app.param(&#39;user&#39;, function (req, res, next, id) {
+  User.find(id, function (err, user) {
+    if (err) {
+      next(err);
+    } else if (user) {
+      req.user = user;
+      next();
+    } else {
+      next(new Error(&#39;failed to load user&#39;));
+    }
+  });
+});
+</code></pre><p><em>Source: <a href="https://github.com/visionmedia/express/blob/master/examples">Express.js examples</a></em></p>
+<h3 id="request-handlers">Request Handlers</h3>
+<p>So far, we&#39;ve seen the features of Express that allow us to set up a web server,
+its middleware, and routes. Now we deal with the last part of the request loop</p>
+<ul>
+<li>writing handlers that respond to a client with relevant data.</li>
+</ul>
+<p>Request handlers are passed two arguments - <code>(req, res)</code> - which are the
+same as the request and response we saw in the barebones Node http server.
+The middleware in an Express application mostly serves to augment the <code>req</code> and
+<code>res</code> objects with added functionality. </p>
+<ul>
+<li><code>req.params</code>: hash of the parsed URL parameters along the whole path</li>
+<li><code>req.query</code>: hash of the parsed query string</li>
+<li><code>req.route</code>: detailed info about the route, same object as in <code>app.routes</code></li>
+<li><code>req.get(field)</code>: HTTP header fields</li>
+<li><code>req.accepts(type)</code> / <code>req.accepted</code>: check the accepted media types for the
+request</li>
+<li><code>req.ip</code>: client IP</li>
+</ul>
+<p>In a request handler, you&#39;ll want to inspect the request, do some business
+logic, and then construct a response. <code>res</code> contains functionality such as:</p>
+<ul>
+<li><code>res.get</code> / <code>res.set</code>: HTTP header fields</li>
+<li><code>res.redirect</code></li>
+<li><code>res.send</code>: send an HTML, JSON, XML, etc. response</li>
+<li><code>res.render</code>: if a view engine is set, this will invoke the engine and
+generate HTML based on locals you pass in or those that have been set through
+middleware</li>
+</ul>
+<hr>
+<h2 id="connecting-to-the-front-end">Connecting to the front end</h2>
+<p>...</p>
+<hr>
+<p><strong>References</strong>:</p>
+<ul>
+<li><a href="http://addyosmani.github.io/backbone-fundamentals/#creating-the-back-end">Backbone Fundamentals</a></li>
+<li><a href="http://howtonode.org/express-mongodb">Express / MongoDB tutorial</a></li>
+</ul>
+<p>More Node.js, you say?</p>
+<ul>
+<li><a href="http://www.nodecloud.org/">NodeCloud</a> - ranked list of node.js-related
+websites</li>
+</ul>
 
       </section>
     </div>
