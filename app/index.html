@@ -197,16 +197,18 @@ available in April.</p>
             <tr>
               <td>8</td>
               <td>3/19</td>
-              <td>Express framework for Node</td>
+              <td>
+                <a href="#server-js-2">
+                  Express framework for Node <br/>
+                  Routing & middleware
+                </a>
+              </td>
               <td>DBA: Exercise 2</td>
             </tr>
             <tr>
               <td>9</td>
               <td>3/26</td>
-              <td>
-                Client side routing <br/>
-                Backbone.js extensions (MarionetteJS)
-              </td>
+              <td>Scaling client-side applications</td>
               <td>
                 Eloquent JS Chapter 9 <br/>
                 DBA: Backbone Extensions, Common Problems & Solutions
@@ -3797,19 +3799,19 @@ framework for Node, and stringing the JavaScript web application stack together.
 <p>Some kind of URL parsing is certainly necessary to route web requests to various
 controller actions / handlers. You might use functions like the following to
 inspect parts of the URL and query string (using only core modules):</p>
-<pre><code>                                    url.parse(string).query
-                                            |
-</code></pre><p>url.parse(string).pathname      |
-                            |                   |
-                            |                   |</p>
-<hr>
-<pre><code>http://localhost:8888/start?foo=bar&amp;hello=world
-                                ---       -----
-                                 |          |
-                                 |          |
-querystring(string)[&quot;foo&quot;]    |
-                                            |
-querystring(string)[&quot;hello&quot;]
+<pre><code>|                                   url.parse(string).query
+|                                           |
+|           url.parse(string).pathname      |
+|                       |                   |
+|                       |                   |
+|                     ------ -------------------
+http://localhost:8888/start?foo=bar&amp;hello=world
+|                               ---       -----
+|                                |          |
+|                                |          |
+|             querystring(string)[&quot;foo&quot;]    |
+|                                           |
+|                       querystring(string)[&quot;hello&quot;]
 </code></pre><p><em>Source: Node Beginner Book</em></p>
 <p>You can imagine how we might program our server to send requests for certain
 pathnames to different handlers and pass along relevant data (for example, from
@@ -3853,7 +3855,8 @@ easily create your own.
 If we add in some standard <strong>middleware</strong> (a term broadly used to define plugins
 for a web framework) and move routes to a separate module, we get something
 like this:</p>
-<pre><code>var express = require(&#39;express&#39;)
+<pre><code>// server.js
+var express = require(&#39;express&#39;)
   , app     = express()
   , routes  = require(&#39;./routes&#39;);
 
@@ -3886,13 +3889,13 @@ app.get(&#39;/&#39;, routes.site.index);
 
 // User routes
 
-app.all(&#39;/users&#39;,         routes.users.list);
-app.all(&#39;/user/:id/:op?&#39;, routes.users.load);
+app.all(&#39;/users&#39;,           routes.users.list);
+app.all(&#39;/user/:id/:op?*&#39;,  routes.users.load);
 
-app.get(&#39;/user/:id&#39;,      routes.users.view);
-app.get(&#39;/user/:id/view&#39;, routes.users.view);
-app.get(&#39;/user/:id/edit&#39;, routes.users.edit);
-app.put(&#39;/user/:id/edit&#39;, routes.users.update);
+app.get(&#39;/user/:id&#39;,        routes.users.view);
+app.get(&#39;/user/:id/view&#39;,   routes.users.view);
+app.get(&#39;/user/:id/edit&#39;,   routes.users.edit);
+app.put(&#39;/user/:id/edit&#39;,   routes.users.update);
 
 // Posts routes
 
@@ -3905,8 +3908,8 @@ var server = app.listen(3000);
 console.log(&#39;Express app listening on port %d&#39;, server.address().port);
 </code></pre><p>A few new things are introduced here:</p>
 <ul>
-<li>a <strong>view engine</strong> is set, in this case Jade, which enables <code>res.render()</code> to
-render HTML pages in responses</li>
+<li>a <strong>view engine</strong> is set, in this case the Jade templating engine, which
+enables <code>res.render()</code> to render &amp; send HTML pages in responses</li>
 <li><code>express.cookieParser()</code>: enables getting / setting cookies</li>
 <li><code>express.bodyParser()</code>: enables parsing of request bodies including <code>json</code>,
 <code>urlencoded</code>, and <code>multipart</code> middleware (it&#39;s actually just a wrapper for
@@ -3914,11 +3917,68 @@ those three modules)</li>
 <li><code>express.directory</code> &amp; <code>express.static</code>: serve directories and their files;
 essentially a file browser</li>
 </ul>
-<p>There&#39;s also another kind of routing function in use with <code>app.all</code>, which
-attaches &quot;global&quot; logic to a route. In this case, if we ever hit a route which
-pertains to a specific user, the first handler that gets run will be
+<p>There&#39;s also another kind of routing function in use: <code>app.all</code>, which
+attaches &quot;global&quot; logic to a route. In the above example, if we ever hit a route
+which pertains to a specific user, the first handler that gets run will be
 <code>router.user.load</code> (presumably, fetch a user&#39;s data from the database, or
-a handle for it).</p>
+a handle for it). The <code>/op?*</code> part of the route will make anything past <code>:id</code>
+optional in that route.</p>
+<p><strong>Important</strong>: now that there are multiple (asynchronous)
+handlers attached to a route, we need to explicitly tell express when one
+handler is finished so that the next one can run (it&#39;s impossible to know
+otherwise). This is done by calling the <code>next</code> function in a handler. Here&#39;s
+what the routes file for the above example might look like:</p>
+<pre><code>// routes.js
+
+// assume database functionality is defined elsewhere...
+var db = require(&#39;./db&#39;);
+
+module.exports = {
+
+  user {
+
+    list: function (req, res) {
+      var users = db.getUsers();
+      res.send(&#39;users: &#39; + users.join(&#39;, &#39;));
+    },
+
+    load: function (req, res, next) {
+      req.user = db.loadUser(req.params.id);
+      next();
+    },
+
+    view: function (req, res, next) {
+      res.send(&#39;viewing user &#39; + req.user.name);
+    },
+
+    edit: function (req, res) {
+      res.send(&#39;editing user &#39; + req.user.name);
+    },
+
+    update: function (req, res) {
+      var success = db.updateUser(req.user, req.params);
+
+      if (success) {
+        res.send(&#39;user successfully updated&#39;);
+      } else {
+        res.send(&#39;user update unsucessful&#39;);
+      }
+    }
+
+  },
+
+  posts: {
+
+    list: function (req, res) {
+      res.send(&#39;list of posts&#39;);
+    }
+
+  }
+
+};
+</code></pre><p>If we didn&#39;t call <code>next()</code> in <code>load</code> above, then the request would hang and
+a client wouldn&#39;t get a response on that route.</p>
+<hr>
 <p>An alternative way to organize routes might be like
 <a href="https://github.com/visionmedia/express/blob/master/examples/route-map/index.js">this</a>:</p>
 <pre><code>app.map = function (a, route) {
@@ -4053,14 +4113,17 @@ an Express route, the callback will be invoked.</p>
   });
 });
 </code></pre><p><em>Source: <a href="https://github.com/visionmedia/express/blob/master/examples">Express.js examples</a></em></p>
+<p>Here&#39;s a rough diagram of how all the above routing &amp; middleware works
+together in the web server:</p>
+<p><img src="build/images/express-diagram.png" alt="express-diagram"></p>
 <h3 id="request-handlers">Request Handlers</h3>
 <p>So far, we&#39;ve seen the features of Express that allow us to set up a web server,
-its middleware, and routes. Now we deal with the last part of the request loop</p>
-<ul>
-<li>writing handlers that respond to a client with relevant data.</li>
-</ul>
-<p>Request handlers are passed two arguments - <code>(req, res)</code> - which are the
-same as the request and response we saw in the barebones Node http server.
+its middleware, and routes. Now we deal with the last part of the request loop:
+writing handlers that respond to a client with relevant data.</p>
+<p>Request handlers are passed two arguments - <code>req</code> and <code>res</code> - which are the
+same as the request and response we saw in the barebones Node http server. (As
+we saw above, there&#39;s also a third argument, <code>next</code>, used for chaining handler
+logic together).
 The middleware in an Express application mostly serves to augment the <code>req</code> and
 <code>res</code> objects with added functionality. </p>
 <ul>
@@ -4083,18 +4146,11 @@ generate HTML based on locals you pass in or those that have been set through
 middleware</li>
 </ul>
 <hr>
-<h2 id="connecting-to-the-front-end">Connecting to the front end</h2>
-<p>...</p>
-<hr>
 <p><strong>References</strong>:</p>
 <ul>
 <li><a href="http://addyosmani.github.io/backbone-fundamentals/#creating-the-back-end">Backbone Fundamentals</a></li>
 <li><a href="http://howtonode.org/express-mongodb">Express / MongoDB tutorial</a></li>
-</ul>
-<p>More Node.js, you say?</p>
-<ul>
-<li><a href="http://www.nodecloud.org/">NodeCloud</a> - ranked list of node.js-related
-websites</li>
+<li><a href="http://expressjs.com/3x/api.html">Express API reference</a></li>
 </ul>
 
       </section>
