@@ -4159,9 +4159,96 @@ middleware</li>
 
       </section>
       <section class="pure-u-3-4 notes hw6 language-javascript"><h1 id="homework-6-full-stack-js-application">Homework 6: Full Stack JS Application</h1>
-<p>Due <em>Saturday, April 5 at 9 AM</em>.</p>
-<hr>
-<p><em>Coming Soon</em>!</p>
+<p>Due <em>Wednesday, April 9 at 9 AM</em>.</p>
+<p>Implementation stub available in the
+<a href="https://github.com/cis197s14/hw/blob/master/hw6/">homework repository</a>.</p>
+<p>We&#39;re going to be finishing up our Pokémon application by integrating the
+client-side Backbone app with an Express web API. You&#39;ll be doing some
+refactoring and implementing map persistence through the local web server.</p>
+<p>The below gif shows what the final result will look like. Each map is being
+automatically saved to the server whenever an edit is made.</p>
+<p><img src="build/images/gifs/switching-maps.gif" alt="switching-maps"></p>
+<p>Instead of persisting maps via <code>localStorage</code>, we&#39;re going to use our own API
+and load the stored maps into a <code>Backbone.Collection</code> called <code>MapStorage</code>.
+Typically with Backbone Collections, you will instantiate it and then call
+<code>.fetch()</code>, which will send a GET request to the <code>url</code> specified for the
+Collection. Depending on options you pass into <code>fetch</code>, this may trigger a
+<code>reset</code> event. In the implementation stub provided to you, the application is
+initialized once this event is fired (i.e., the data we need from the server is
+ready to be used).</p>
+<h3 id="application-structure">Application Structure</h3>
+<p>The Pokémon client-side application is now served (statically) through a node
+server. It has also been reconfigured into AMD modules and the Backbone models
+/ views are in their corresponding folders.</p>
+<p>To run the application:</p>
+<ul>
+<li>Install dependencies with <code>npm install</code> (dependencies are specified in
+<code>package.json</code>)</li>
+<li>Run <code>node server.js</code> (if this crashes, you&#39;ll have to restart it...)</li>
+<li>Navigate to <code>http://localhost:3000/#build/default</code></li>
+</ul>
+<h4 id="what-s-provided-in-the-implementation-stub">What&#39;s provided in the implementation stub</h4>
+<ul>
+<li><p>A <code>map-storage</code> module on the server that implements the business logic of map
+data persistence. Take a look at this file to see how <code>fs</code> (the built-in file
+system library) and <code>RSVP</code> (a Promise library) are used. Maps are stored as
+JSON files in the folder <code>hw6/maps/</code>.</p>
+</li>
+<li><p>Updated Backbone routes on the client that contain the name of the map
+currently being used:</p>
+<ul>
+<li><code>build/:mapName</code>: initializes the builder view</li>
+<li><code>play/:mapName/r:row/c:col</code>: initializes the player view</li>
+<li><code>new/:mapName</code>: starts off a new blank map, redirects to <code>build/:mapName</code></li>
+</ul>
+<p>Most of the initialization / routing logic is already implemented in
+<code>public/app/pokemon.js</code>.</p>
+</li>
+<li><p>Model initialization &amp; general bookkeeping in the <code>App</code> model
+(<code>public/app/models/app.js</code>). This model also enables communication between
+various other models.</p>
+</li>
+<li><p>A stub for <code>AppView</code> (<code>public/app/views/app.js</code>). This view should instantiate
+a <code>MapView</code>, <code>PlayerView</code>, and <code>BuilderView</code> as well as provide functions to
+switch between application states (playing / building). It should also have
+standard rendering logic using the new underscore template in <code>#app-template</code>
+(it will probably help to override <code>App.toJSON()</code> here).
+Finally, it should invoke the &#39;newMap&#39; route when a user hits &#39;Enter&#39; on the
+new map text field.</p>
+</li>
+<li><p>Complete <code>BuilderView</code>, <code>PaletteView</code>, and <code>PlayerView</code>.</p>
+</li>
+<li><p>A nearly complete <code>MapView</code> that only requires one additional rendering
+method.</p>
+</li>
+<li><p>Underscore templates for all views in <code>index.html</code>. Note that there is no
+HTML markup rendered on page load; rather everything will be rendered through
+JS.</p>
+</li>
+<li><p>The <code>Player</code> model. Note that this model triggers a <code>&#39;shiftMap&#39;</code> event to
+tell the application router to move the visible map area when the player
+reaches an edge rather than calling the router directly. This is a more
+convenient method of control now that we have modules and don&#39;t want all our
+application models globally available in an object like <code>POKEMON</code>.</p>
+</li>
+</ul>
+<h3 id="completing-the-assignment">Completing the assignment</h3>
+<ol>
+<li>Complete the <code>TODO</code> items in <code>server.js</code>. You can test the API routes by
+navigating to them in your web browser (<code>localhost:3000/api/maps</code>).</li>
+<li>Study and understand the <code>App</code> and <code>Builder</code> models</li>
+<li>Finish the implementation of <code>MapView</code></li>
+<li>Fill in the <code>AppView</code> stub</li>
+<li>Fill in the <code>MapStorage</code> stub to talk to the server</li>
+</ol>
+<p>There is additional instruction within the comment blocks in the code. Try
+and make your application match the demonstration gif near the top of this page
+(it illustrates most of the new functionality)!</p>
+<h3 id="notes">Notes</h3>
+<p>As a general rule, please remove &quot;TODO&quot; comment blocks after you implement that
+portion of the assignment.</p>
+<p><strong><em>Extra Credit</em></strong> (3pts): Implement &quot;delete map&quot; functionality that removes
+a map from the data store.</p>
 
       </section>
       <section class="pure-u-3-4 notes proposal language-javascript"><h1 id="final-project-proposal">Final Project Proposal</h1>
