@@ -223,8 +223,9 @@ projects) will be available in April.</p>
               <td>9</td>
               <td>4/2</td>
               <td>
-                Streams, Promises, Generators <br/>
-                Debugging JavaScript performance
+                <a href="#lecture9">
+                  EventEmitters, Streams, Promises
+                </a>
               </td>
               <td></td>
             </tr>
@@ -4749,6 +4750,349 @@ Events, Common Problems &amp; Solutions</li>
 <li><a href="http://eloquentjavascript.net/chapter9.html">EloquentJS, Chapter 9</a></li>
 <li><a href="http://speakingjs.com/es5/ch31.html">Speaking JS, Chapter 31</a></li>
 </ul>
+
+      </section>
+      <section class="pure-u-3-4 notes lecture9 language-javascript"><h1 id="advanced-js-programming-topics">Advanced JS Programming Topics</h1>
+<h2 id="motivation-for-asynchronous-abstraction">Motivation for Asynchronous Abstraction</h2>
+<p>I&#39;m going to start with a simple example of asynchronous programming and build
+up to something not-so-simple that presents all sorts of problems in our current
+model of async JavaScript.</p>
+<p>Let&#39;s say we&#39;re trying to read a file in Node. We might create a wrapper for the
+<code>fs.readFile</code> function like this:</p>
+<pre><code>function read (name) {
+  fs.readFile(name, function (err, data) {
+    if (err) { throw err; }
+    return data;
+  });
+}
+</code></pre><p>But hold on a minute – this doesn&#39;t work. The <code>return data;</code> line doesn&#39;t send
+the result anywhere useful and the <code>read</code> function ends up returning <code>undefined</code>
+whenever it&#39;s invoked.</p>
+<p>To get a result, we have to switch up the control flow.</p>
+<pre><code>function read (name, cb) {
+  fs.readFile(name, function (err, data) {
+    if (err) { throw err; }
+    cb(data);
+  });
+}
+
+read(&#39;foo.json&#39;, function (data) {
+  // ...
+});
+</code></pre><p>Sure, this doesn&#39;t look much different from simply using <code>fs.readFile</code>, but when
+you want to keep code modular and have <code>read</code> called from a separate file, this
+abstraction might make sense. We aren&#39;t doing much to handle the potential
+error, however (keep this in mind for later).</p>
+<p>What if we instead want to read an entire directory&#39;s contents? This requires an
+<code>fs</code> call to list the files in a directory and then multiple <code>readFile</code> calls
+to get the contents of those files. (A similar situation might occur with other
+async tasks as well, e.g. one API call that is required to get data necessary to
+make successive calls).</p>
+<pre><code>function getDirectoryContents (dir, cb) {
+  fs.readdir(dir, function (err, files) {
+    // `files` is an array of filenames excluding &#39;.&#39; and &#39;..&#39;
+
+    var contents = {};
+
+    _(files).each(function (filename) {
+      fs.readFile(filename, function (err, data) {
+        contents[filename] = data;
+      });
+    });
+
+    cb(contents);
+  });
+}
+
+getDirectoryContents(&#39;myDir&#39;, function (files) {
+  console.log(files);   // {}
+});
+</code></pre><p>I tried to be clever here by pushing results of the <code>readFile</code> calls into an
+object and sending that object to the callback (remember, it&#39;s passed by
+reference, not copy).</p>
+<p><em>Does this work as intended? What might be a problem with this approach?</em></p>
+<p>If you inspect the <code>files</code> object within <code>getDirectoryContents</code>, you&#39;ll find
+that it&#39;s not quite populated with the contents you expect upon immediate
+execution. We could choose to wait a few milliseconds before looking at the
+contents, to allow for the time it takes for the OS to run its file system
+functions:</p>
+<pre><code>getDirectoryContents(&#39;myDir&#39;, function (files) {
+  setTimeout(function () {
+    console.log(files);
+  }, 5);
+});
+</code></pre><p>But now we&#39;ve introduced more asynchronous code and an arbitrarily-defined
+control scheme involving <code>setTimeout</code>. The code looks ugly and is brittle. What
+if we encountered a large JSON file and reading it took a long time?</p>
+<p>Perhaps we could improve upon this with some events control flow. Let&#39;s
+assume that a simple <code>Events</code> mixin is already defined for us (similar to
+<code>Backbone.Events</code>). Here&#39;s how we might construct an asynchronous &quot;<strong>stream</strong>&quot;
+object:</p>
+<pre><code>function getDirectoryContentsStream (dirname) {
+  var contentsStream = _.extend({}, Events);
+
+  fs.readdir(dirname, function (err, filenames) {
+    var jsonFiles = _.filter(filenames, isJSONFile)
+      , filesRead = 0;
+
+    _(jsonFiles).each(function (filename) {
+      fs.readFile(dirname + &#39;/&#39; + filename, function (err, data) {
+
+        contentsStream.trigger(&#39;file&#39;, JSON.parse(data));
+
+        if (++filesRead === jsonFiles.length) {
+          contentsStream.trigger(&#39;complete&#39;);
+        }
+      });
+    });
+
+  });
+
+  return contentsStream;
+}
+</code></pre><p>A number of things have changed. There is no callback argument required; all the
+asynchronous control happens on the stream once it is returned from this
+function. The two events fired are:</p>
+<ul>
+<li><code>&#39;file&#39;</code>: passes along the parsed JSON object from a file once it&#39;s read</li>
+<li><code>&#39;complete&#39;</code>: simply notifies that the stream has finished its work and all
+the relevant files have been read.</li>
+</ul>
+<p>Here&#39;s how you use the stream:</p>
+<pre><code>var stream    = getDirectoryContentsStream(&#39;data&#39;)
+  , contents  = [];
+
+stream.on(&#39;file&#39;, function (json) {
+  console.log(&#39;*** got file ***&#39;);
+  contents.push(json);
+});
+
+stream.on(&#39;complete&#39;, function () {
+  console.log(&#39;*** complete ***&#39;);
+  console.log(contents);
+});
+</code></pre><hr>
+<h2 id="-eventemitter-and-stream-in-node"><code>EventEmitter</code> and <code>Stream</code> in Node</h2>
+<p>What we&#39;ve just built here are the basics of two fairly important core modules
+in Node. You can access the <code>EventEmitter</code> class with
+<code>require(&#39;events&#39;).EventEmitter</code>; its API is similar to the one we&#39;ve been
+using as <code>Event</code>.</p>
+<p><code>Stream</code> is an abstract interface implemented by various classes / objects in
+Node. It represents a data resource that can be written to (<em>Writable</em>), read
+from (<em>Readable</em>), or both (<em>Duplex</em>). All Streams are EventEmitters; they often
+have additional custom methods and properties.</p>
+<p>Readable streams abstract some <em>data source</em>; data essentially comes out of
+them in chunks. You can pause, resume, pipe, and do other things with these
+streams. Some examples of readable streams:</p>
+<ul>
+<li><code>http</code> responses on a client</li>
+<li><code>http</code> requests on a server</li>
+<li><code>fs</code> read streams</li>
+<li><code>zlib</code> streams</li>
+<li><code>crypto</code> streams</li>
+<li><code>tcp</code> sockets</li>
+<li><code>child-process</code> stdout and stderr</li>
+<li><code>process.stdin</code></li>
+</ul>
+<p>To get data out of the stream, simply listen for its <code>&#39;data&#39;</code> event.</p>
+<pre><code>var fstream = fs.createReadStream(&#39;data/foo.json&#39;);
+
+fstream.on(&#39;data&#39;, function (data) {
+  // ...
+});
+</code></pre><p>For more information about objects that implement this interface, you&#39;ll want to
+consult the <a href="http://nodejs.org/api/">Node documentation</a>.</p>
+<hr>
+<h2 id="promises">Promises</h2>
+<p>Let&#39;s go back to the asynchronous task of getting the file contents in
+a directory. There&#39;s certainly more than one way to solve this problem. I&#39;m
+going to present another Node programming paradigm you can add to your toolkit.</p>
+<p>A <strong><em>Promise</em></strong> is an object that represents an <em>eventual value</em> from a
+computation or operation. It is the crucial idea that lets you go from having
+callback-oriented code like this:</p>
+<pre><code>function doSomethingWithResult (value) {
+  // ...
+}
+
+doSomething(doSomethingWithResult);
+</code></pre><p>to more <em>procedural</em> code like this:</p>
+<pre><code>doSomething().then(doSomethingWithResult);
+</code></pre><p>Now you might wonder why this is useful at all – we&#39;re actually writing <em>more
+code</em> with the second snippet. The benefits of promises become apparent in their
+more complex usage scenarios – namely, with chaining and error handling.</p>
+<p>Instead of descending into callback hell with nesting like this:</p>
+<pre><code>fs.readdir(dirname, function (err, files) {
+  if (err) {
+    console.log(err);
+    return;
+  }
+
+  var fileToRead = dirname + &#39;/&#39; + files[0];
+
+  fs.stat(fileToRead, function (err, stats) {
+    if (err) {
+      console.log(err);
+      return;
+    }
+    if (isRecentFile(stats)) {
+      fs.readFile(fileToRead, function (err, contents) {
+        if (err) {
+          console.log(err);
+          return;
+        }
+        doSomeOtherAsyncTask(function (err, data) {
+          // ...
+        });
+      });
+    }
+  });
+});
+</code></pre><p>...you might write a series of promise transformations:</p>
+<pre><code>q(fs.readdir, dirname)
+  .then(getFirstFile)
+  .then(getFileStats)
+  .then(filterRecentFile)
+  .then(doSomeOtherAsyncTask)
+  .catch(errorHandler);
+</code></pre><p>Note that you probably could have refactored the above &quot;callback hell&quot; example
+by creating named functions. But you still wouldn&#39;t get syntax as nice as this
+and more importantly, you wouldn&#39;t be able to handle errors so elegantly.</p>
+<p>By throwing in a <code>.catch()</code> call at the end of this promise chain, we can simply
+write one function that handles <em>any error along the chain</em>. In other words,
+errors are propagated through the chain.</p>
+<p><em>Note</em>: If you&#39;re familiar with monads in mathematics or functional programming,
+you can actually think of promises as monads in JS. Do-notation in Haskell
+serves to turn functionally-composed control flow into an imperative one,
+similar to how we just reconciled the JS callback pyramid into a series of
+promise-based steps.</p>
+<h3 id="implementing-promises">Implementing promises</h3>
+<p>OK, so you might be on board with the idea of promises (that&#39;s good, they&#39;re
+pretty cool). But how are they implemented? By giving you some ideas about how
+they&#39;re implemented, I hope to give you some better tools to understand trickier
+situations involving Promises.</p>
+<p>Going back to the <code>doSomething</code> function example, we know that we need to change
+the result of such a function from this:</p>
+<pre><code>function doubleValue (val, callback) {
+  callback(value * 2);
+}
+</code></pre><p>...into this:</p>
+<pre><code>function doubleValue (val) {
+  return {
+    then: function (callback) {
+      callback(value * 2);
+    }
+  }
+}
+</code></pre><p>This is simply some (relatively uninteresting) sugar for the callback pattern so
+far, but it&#39;s a start. You can see that we have to return an object. But this is
+very far from being modular.</p>
+<p>Let&#39;s create a <code>Promise</code> class. The callback within <code>then</code> should have the
+opportunity to <em>resolve</em> itself (signify that a result value has been
+determined). We&#39;re still using raw values (not async results) to keep things
+simple, though.</p>
+<pre><code>function Promise (fn) {
+  var callback;
+
+  this.then = function (cb) {
+    callback = cb;
+  };
+
+  function resolve (value) {
+    callback(value);
+  }
+
+  fn(resolve);
+
+  return this;
+}
+
+function doubleValue = (val) {
+  return new Promise(function (resolve) {
+    var value = val * 2;
+    resolve(value);
+  });
+}
+
+doubleValue(21).then(console.log);
+</code></pre><p>The structure is kind of getting somewhere... but does it work? If you try out
+this code you&#39;ll realize there&#39;s a timing problem – <code>resolve</code> is called when
+<code>callback</code> hasn&#39;t been set. Here&#39;s a hack that might fix that:</p>
+<pre><code>function Promise (fn) {
+  // ...
+
+  function resolve (value) {
+    setTimeout(function () {
+      callback(value);
+    }, 1);
+  }
+
+  // ...
+}
+</code></pre><p>Using <code>setTimeout</code> like this forces the callback to be called on the next tick
+of the event loop, giving <code>then</code> a chance to set the <code>callback</code> variable.</p>
+<p>But of course, this code is very hacky. It&#39;s brittle and will break if we
+introduce any sort of asynchronicity. This reveals something you may not have
+realized about promises thus far: <strong>they have state</strong>.</p>
+<p><strong>A promise can be <em>pending</em> waiting for a value, <em>resolved</em> with a value, or
+<em>failed</em> with an error.</strong> The above example was set up for failure so that it
+could be simple enough to wrap your head around.</p>
+<p>If we start keeping track of state within <code>Promise</code>, we can remove the
+<code>setTimeout</code> hack:</p>
+<pre><code>function Promise (fn) {
+  var state = &#39;pending&#39;;
+
+  var value, deferredCallback;
+
+  function resolve (newValue) {
+    value = newValue;
+    state = &#39;resolved&#39;;
+
+    if (deferredCallback) {
+      handle(defferedCallback);
+    }
+  }
+
+  function handle (onResolved) {
+    if (state === &#39;pending&#39;) {
+      deferredCallback = onResolved;
+      return;
+    }
+
+    onResolved(value);
+  }
+
+  this.then = function (onResolved) {
+    handle(onResolved);
+  }
+
+  fn(resolve);
+}
+</code></pre><p>This is getting complicated, but now we can invoke <code>then()</code> whenever we want on
+the Promise and its callback can invoke <code>resolve()</code> whenever it wants – it
+basically works with synchronous or asynchronous code.</p>
+<p>The above implementation works because both <code>then()</code> and <code>resolve()</code> hand off to
+a new function, <code>handle()</code>, which decides what to do based on the state of the
+Promise:</p>
+<ul>
+<li>If <code>then()</code> is called <em>on the promise</em> before <code>resolve()</code> is called <em>within
+it</em>, then there is no value yet to pass along. The state is pending, so we&#39;ll
+hold on to the callback. When <code>resolve()</code> is called later, the &quot;deferred&quot;
+callback is invoked with a valid value.</li>
+<li>If <code>resolve()</code> is called before <code>then()</code>, we can imply hold onto the resulting
+value and pass it along to the callback when necessary.</li>
+</ul>
+<p>There&#39;s more work to be done (implement chaining and error handling), but these
+are the basics, and they&#39;re pretty powerful.</p>
+<p>For a more detailed analysis, I recommend this article: <a href="http://mattgreer.org/articles/promises-in-wicked-detail/">Promises In Wicked
+Detail</a>.</p>
+<h3 id="what-s-next">What&#39;s next</h3>
+<p>Now that we&#39;ve seen all their great benefits, you should go check out some
+promise libraries! Unfortunately they are not included in the ECMAScript
+standard, so yes, we do have to resort to libraries here. Some good ones are
+<a href="https://github.com/kriskowal/q">Q</a> and
+<a href="https://github.com/tildeio/rsvp.js">rsvp.js</a>. These both implement the
+&quot;Promises/A&quot; spec, which will soon be included in ES6 (yay built-in promises!).
+They also have some good documentation which is good to read up on.</p>
 
       </section>
     </div>
