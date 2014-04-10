@@ -4252,7 +4252,10 @@ to the currently selected map model (from all the maps we have loaded in
 (within <code>initialize</code>, naturally), implement a <code>render</code> function to display
 the overall layout and application controls on the page, and implement
 two methods to switch between &#39;playing&#39; mode and &#39;building&#39; mode by
-manipulating its children views.</li>
+manipulating its children views. Note that you must pass a special object
+to <code>MapView</code>&#39;s <code>render</code> method to let it show the visible map properly;
+this is documented within <code>views/map.js</code> (<em>hint</em>: check out the routing
+function for this situation in <code>pokemon.js</code>).</li>
 <li>Finish the implementation of <code>MapView</code>.</li>
 </ol>
 <p>There is additional instruction within the comment blocks in the code. Try

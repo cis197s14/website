@@ -98,13 +98,16 @@
      (within `initialize`, naturally), implement a `render` function to display
      the overall layout and application controls on the page, and implement
      two methods to switch between 'playing' mode and 'building' mode by
-     manipulating its children views.
+     manipulating its children views. Note that you must pass a special object
+     to `MapView`'s `render` method to let it show the visible map properly;
+     this is documented within `views/map.js` (_hint_: check out the routing
+     function for this situation in `pokemon.js`).
   5. Finish the implementation of `MapView`.
 
   There is additional instruction within the comment blocks in the code. Try
   and make your application match the demonstration gif near the top of this page
   (it illustrates most of the new functionality)!
-  
+
   ### Notes
   
   As a general rule, please remove "TODO" comment blocks after you implement that
