@@ -83,14 +83,24 @@
     application models globally available in an object like `POKEMON`.
   
   ### Completing the assignment
-  
+
   1. Complete the `TODO` items in `server.js`. You can test the API routes by
      navigating to them in your web browser (`localhost:3000/api/maps`).
-  2. Study and understand the `App` and `Builder` models
-  3. Finish the implementation of `MapView`
-  4. Fill in the `AppView` stub
-  5. Fill in the `MapStorage` stub to talk to the server
-  
+  2. Fill in the `MapStorage` stub to talk to the server. Once this module
+     fetches maps successfully from the server, it should trigger a `'reset'`
+     event, which in turn triggers a `'ready'` event on the `App` model. This
+     essentially initializes the rest of the application.
+  3. Study and understand the `App` and `Builder` models. Note that a reference
+     to the currently selected map model (from all the maps we have loaded in
+     `MapStorage`) is kept as an attribute called `'mapModel'` on the `App`
+      model.
+  4. Fill in the `AppView` stub. It needs to initialize its children views
+     (within `initialize`, naturally), implement a `render` function to display
+     the overall layout and application controls on the page, and implement
+     two methods to switch between 'playing' mode and 'building' mode by
+     manipulating its children views.
+  5. Finish the implementation of `MapView`.
+
   There is additional instruction within the comment blocks in the code. Try
   and make your application match the demonstration gif near the top of this page
   (it illustrates most of the new functionality)!

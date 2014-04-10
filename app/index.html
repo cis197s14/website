@@ -234,7 +234,13 @@ hours of work. The tentative due date is <strong>TBD</strong> (during finals per
                 Reactive frameworks & libraries <br/>
                 WebSockets
               </td>
-              <td></td>
+              <td>
+                <a href="https://developer.mozilla.org/en-US/docs/WebSockets">
+                  [MDN] WebSockets
+                </a> <br/>
+                <a href="http://socket.io/">Socket.io library</a>
+                
+              </td>
             </tr>
             <tr>
               <td>11</td>
@@ -243,19 +249,18 @@ hours of work. The tentative due date is <strong>TBD</strong> (during finals per
                 Build systems &amp; tools <br/>
                 Testing
               </td>
-              <td></td>
+              <td>
+                <a href="http://superherojs.com/#testing">
+                  SuperheroJS
+                </a> (Testing, Tools, and Performance sections)
+                
+              </td>
             </tr>
             <tr>
               <td>12</td>
               <td>4/23</td>
               <td><em>Special Topics</em>: Data visualization with D3.js</td>
-              <td>
-                <a href="https://developer.mozilla.org/en-US/docs/WebSockets">
-                  [MDN] WebSockets
-                </a> <br/>
-                <a href="http://socket.io/">Socket.io library</a>
-                
-              </td>
+              <td></td>
             </tr>
             <tr>
               <td>13</td>
@@ -4235,10 +4240,20 @@ application models globally available in an object like <code>POKEMON</code>.</p
 <ol>
 <li>Complete the <code>TODO</code> items in <code>server.js</code>. You can test the API routes by
 navigating to them in your web browser (<code>localhost:3000/api/maps</code>).</li>
-<li>Study and understand the <code>App</code> and <code>Builder</code> models</li>
-<li>Finish the implementation of <code>MapView</code></li>
-<li>Fill in the <code>AppView</code> stub</li>
-<li>Fill in the <code>MapStorage</code> stub to talk to the server</li>
+<li>Fill in the <code>MapStorage</code> stub to talk to the server. Once this module
+fetches maps successfully from the server, it should trigger a <code>&#39;reset&#39;</code>
+event, which in turn triggers a <code>&#39;ready&#39;</code> event on the <code>App</code> model. This
+essentially initializes the rest of the application.</li>
+<li>Study and understand the <code>App</code> and <code>Builder</code> models. Note that a reference
+to the currently selected map model (from all the maps we have loaded in
+<code>MapStorage</code>) is kept as an attribute called <code>&#39;mapModel&#39;</code> on the <code>App</code>
+ model.</li>
+<li>Fill in the <code>AppView</code> stub. It needs to initialize its children views
+(within <code>initialize</code>, naturally), implement a <code>render</code> function to display
+the overall layout and application controls on the page, and implement
+two methods to switch between &#39;playing&#39; mode and &#39;building&#39; mode by
+manipulating its children views.</li>
+<li>Finish the implementation of <code>MapView</code>.</li>
 </ol>
 <p>There is additional instruction within the comment blocks in the code. Try
 and make your application match the demonstration gif near the top of this page
