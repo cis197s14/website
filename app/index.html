@@ -74,7 +74,7 @@ Refer to the <a href="#style">style guide</a> for coding JavaScript.</p>
 <h2 id="final-project">Final Project</h2>
 <p>The final project will be an open-ended JavaScript application created with
 client-side framework of the student&#39;s choice. It should demonstrate 10-15
-hours of work. The tentative due date is <strong>TBD</strong> (during finals period).</p>
+hours of work. The due date is <strong>May 9</strong>.</p>
 <p>See the <a href="#proposal"><strong>proposal spec</strong></a> for more information.</p>
 
       </section>
@@ -247,8 +247,10 @@ hours of work. The tentative due date is <strong>TBD</strong> (during finals per
               <td>11</td>
               <td>4/16</td>
               <td>
-                Build systems &amp; tools <br/>
-                Testing
+                <a href="#testing">
+                  Testing <br/>
+                  Build systems &amp; tools
+                </a>
               </td>
               <td>
                 <a href="http://superherojs.com/#testing">
@@ -260,7 +262,11 @@ hours of work. The tentative due date is <strong>TBD</strong> (during finals per
             <tr>
               <td>12</td>
               <td>4/23</td>
-              <td>Compile-to-JS languages</td>
+              <td>
+                <a href="#coffeescript">
+                  Compile-to-JS languages
+                </a>
+              </td>
               <td>
                 <a href="http://arcturo.github.io/library/coffeescript/">
                   The Little Book on CoffeeScript
@@ -271,7 +277,11 @@ hours of work. The tentative due date is <strong>TBD</strong> (during finals per
             <tr>
               <td>13</td>
               <td>4/30</td>
-              <td><em>Special Topics</em>: Data visualization with D3.js</td>
+              <td>
+                <a href="#d3">
+                  Data visualization with D3.js
+                </a>
+              </td>
               <td>
                 <a href="http://alignedleft.com/work/d3-book">
                   Interactive Data Visualization for the Web
@@ -5263,6 +5273,629 @@ standard, so yes, we do have to resort to libraries here. Some good ones are
 <a href="https://github.com/tildeio/rsvp.js">rsvp.js</a>. These both implement the
 &quot;Promises/A&quot; spec, which will soon be included in ES6 (yay built-in promises!).
 They also have some good documentation which is good to read up on.</p>
+
+      </section>
+      <section class="pure-u-3-4 notes lecture10 language-javascript"><h1 id="reactive-frameworks-libraries">Reactive Frameworks &amp; Libraries</h1>
+<h2 id="motivations-for-automatic-reactivity">Motivations for automatic reactivity</h2>
+<p>So far, we&#39;ve learned how to deliver rich client-side applications by
+organizing our code with <strong>Backbone</strong> and leveraging libraries like
+<strong>Underscore</strong> and <strong>jQuery</strong> that abstract away some low-level front end logic.
+We have not yet completed our journey on the ladder of abstraction.</p>
+<p>The Pokémon application in homework assignments has lots of interactivity driven
+by an event system. To keep the <em>view</em> in sync with your <em>models</em>, you had to
+listen for certain events and re-render some portion of the DOM. This pattern
+ends up being quite common. Consider the following view code:</p>
+<pre><code>var PlayerView = Backbone.View.extend({
+
+  events: {
+    // ...
+  },
+
+  initialize: function () {
+    this.tmpl = _.template($(&#39;#player-tmpl&#39;).html());
+
+    this._bindKeyboardEvents();
+
+    // Keep model &lt;-&gt; view in sync
+    this.model.on(&#39;change:hidden&#39;, this.toggle, this);
+
+    // Last argument sets context for callback execution
+    this.model.on(&#39;change:row change:col&#39;, this.position, this);
+  },
+
+  render: function () {
+    var compiledTmpl = this.tmpl(this.model.toJSON());
+    this.$el.html(compiledTmpl);
+  },
+
+  toggle: function () {
+    this.$el.css({
+      display: this.model.get(&#39;hidden&#39;) ? &#39;block&#39; : &#39;none&#39;
+    });
+  },
+
+  position: function () {
+    this.$el.css({
+      left: this.model.get(&#39;col&#39;) * TILE_SIZE,
+      top:  this.model.get(&#39;row&#39;) * TILE_SIZE
+    });
+  }
+
+  _bindKeyboardEvents: function () {
+    $(&#39;document&#39;).on(&#39;keypress&#39;, function (e) {
+      // ...
+      this.model.set(&#39;row&#39;, this.model.get(&#39;row&#39;) + 1);
+    });
+  }
+
+});
+</code></pre><p>Although this is a simplified version of the <code>PlayerView</code> class from homework
+assignments and contains slightly different implementation logic, it helps
+illustrate the motivation behind further abstraction of UI reactivity. You can
+see that we&#39;re explicitly writing &quot;wiring&quot; code to keep the view and the view&#39;s
+DOM elements in sync with the model as the model&#39;s values change. When you write
+a lot of Backbone applications, you&#39;ll realize this is <em>very</em> common. There are
+Backbone extensions available to mitigate this; for example, consider
+<code>Backbone.declarative</code> (<a href="https://github.com/Codecademy/backbone.declarative">link</a>),
+which lets you bind handlers for model events as simply as you would DOM events:</p>
+<pre><code>var PlayerView = Backbone.View.extend({
+
+  events: {
+    // ...
+  },
+
+  modelEvents: {
+    &#39;change:row change:col&#39;: &#39;position&#39;,
+    &#39;change:hidden&#39;: &#39;toggle&#39;
+  },
+
+  initialize: function () {
+    // ...
+  }
+
+  // ...
+
+});
+</code></pre><p>...but this is just syntactic sugar. To solve this problem more elegantly, we&#39;ll
+have to step outside of our comfort zone in the Backbone library and dive into
+some alternative front end frameworks. In particular, we&#39;re looking for a
+feature called <strong><em>data binding</em></strong> -- a system that automatically keeps model
+data in sync with its representation in the view and vice versa.</p>
+<h4 id="front-end-frameworks-libraries-refer-to-slides-">Front end frameworks / libraries (refer to slides)</h4>
+<p><strong>Data binding</strong> has been around for a while in more traditional UI programming
+contexts. In the JS community, a number of frameworks and libraries have
+developed in the past few years to fulfill these reactive UI requirements. The
+most notable are <a href="http://angularjs.org/"><em>AngularJS</em></a>,
+<a href="http://emberjs.com/"><em>Ember.js</em></a>, and <a href="http://knockoutjs.com/"><em>Knockout</em></a>.
+These frameworks provide a lot more functionality than Backbone and as a result,
+they are also more prescriptive about how you should build and structure your
+application.</p>
+<hr>
+<h2 id="our-first-angularjs-application">Our first AngularJS application</h2>
+<p><em>But first</em>: a crash course on the <strong><em>Dependency Injection</em></strong> pattern.</p>
+<p>In the same way that <em>events</em> are an inversion of control flow, <em>dependency
+injection</em> represents an inversion of module loading &amp; dependency management.
+The key idea in this design pattern is that modules are <em>provided</em> the services
+that they need instead of being allowed to search for or &quot;import&quot; these
+services.</p>
+<hr>
+<h3 id="notes">Notes</h3>
+<p>Along the same lines as client-side reactivity, think for a minute about the
+interaction between the client and server.
+We don&#39;t even have the luxury of <em>events</em> here! We have to
+resort to individual server requests to get data, and even these are only
+possible in one direction (client -&gt; server). There are many situations where
+it&#39;s desirable to the client to <strong><em>react</em></strong> to a server action and vice versa.</p>
+
+      </section>
+      <section class="pure-u-3-4 notes testing language-javascript"><h1 id="testing-tools-build-systems">Testing, Tools, &amp; Build Systems</h1>
+<h2 id="does-my-code-work-">Does my code work?</h2>
+<p>By this point, I hope you&#39;ve had a chance to get your feet wet with the
+wonderful Chrome debugger. However, as you&#39;re well aware, stepping through code
+isn&#39;t the only way to verify your programs; <em>testing</em> is an important tool for
+any kind of software developer.</p>
+<p>In JavaScript&#39;s quest to become a &quot;real&quot; language, one of the important
+milestones is a community &amp; standards that encourage safe &amp; valid code through
+testing, both for TDD and code maintainability. The language&#39;s dynamic nature
+and loose typing makes tests all the more important.
+The browser environment also complicates things, especially when you throw in
+cross-browser compatibility.</p>
+<p>One positive outcome of the whole situation is that the browser sandbox
+environment ensures that your code can&#39;t be <em>too</em> harmful for the user. In Node,
+however, this protection doesn&#39;t exist, so you generally have to be a little
+more careful.</p>
+<p>There are no testing features built-in to the ECMAScript standard (no <code>assert</code>
+or the like). There are, however, multiple libraries out there that will help
+you build test suites using what&#39;s already built-in (because all you really
+need at a low level are equality checks and <code>typeof</code>).</p>
+<h2 id="testing-libraries-frameworks">Testing libraries &amp; frameworks</h2>
+<p>JS testing libraries include both (1) assertion libraries and (2) testing
+frameworks. They are built with modularity in mind such that the former are
+typically able to power any given testing framework.</p>
+<p>Assertion libraries:</p>
+<ul>
+<li><a href="http://nodejs.org/api/assert.html"><code>assert</code></a>, a core module in Node</li>
+<li><a href="https://github.com/visionmedia/should.js"><code>should.js</code></a></li>
+<li><a href="https://github.com/LearnBoost/expect.js/"><code>expect.js</code></a></li>
+<li><a href="http://chaijs.com/">Chai</a></li>
+</ul>
+<p>Testing frameworks:</p>
+<ul>
+<li><a href="http://jasmine.github.io/2.0/introduction.html">Jasmine</a></li>
+<li><a href="http://visionmedia.github.io/mocha/">Mocha</a></li>
+<li><a href="https://qunitjs.com/">QUnit</a></li>
+</ul>
+<p>All of these are fairly popular in their own right, so you may choose from them
+as you wish. You&#39;ll also find other more customized libraries out there.</p>
+<p>I mentioned TDD earlier -- you&#39;ll find many of these libraries fall in line with
+TDD (and its close relative, BDD) standard practices. Some of the syntax is
+derived from <em>RSpec</em> and other testing standards in the Rails ecosystem; this
+may be attributed to the fact that many web developers transitioned from writing
+web applications in RoR to heavier client-side applications in JS.</p>
+<h4 id="writing-unit-tests">Writing unit tests</h4>
+<p>Let&#39;s take a look at what it takes to test some simple functions with Mocha and
+<code>should.js</code>. We&#39;ll be writing some tests for the HW1 assignment.
+Mocha provides a way to run test suites using its command line tool,
+which automatically loads the framework, runs a test file, and generates some
+output based on a specified test &quot;reporter&quot;:</p>
+<pre><code>mocha --reporter spec test-suite.js
+</code></pre><p><code>test-suite.js</code>, then, might look like this:</p>
+<pre><code>/*
+ * Import assertion library and the modules to test.
+ */
+var should  = require(&#39;should&#39;)
+  , hw1     = require(&#39;../exercises&#39;)
+  , key     = require(&#39;../exercises-solution&#39;);
+
+/*
+ * Lifted from hw1 stub
+ */
+var priceList = {
+  eggs: 2.50,
+  milk: 3.00,
+  bread: 2.75,
+  orangeJuice: 4.25,
+  chocolate: 1.50
+};
+
+/*
+ * Describe a test suite. These may be nested to provide more structure.
+ */
+describe(&#39;(Exercise 1) Array methods&#39;, function () {
+  var a;
+
+  /*
+   * Runs once before each test within this suite.
+   */
+  beforeEach(function () {
+    a = [ 1, 2, 3, 4, 5 ];
+  });
+
+  /*
+   * A single test that contains one or more assertions. Mocha&#39;s DSL
+   * allows us to write tests that look like plain english.
+   */
+  it(&#39;should sum elements&#39;, function () {
+    hw1.arrayMethods.sum(a).should.equal(15);
+  });
+
+  /*
+   * It&#39;s good practice to provide descriptive test names so you can easily
+   * tell which part of the code is failing at a glance.
+   */
+  it(&#39;should throw an error if summing non-Number elements&#39;, function () {
+    var b = [ 1, &#39;2&#39;, 3 ];
+
+    (function () {
+      hw1.arrayMethods.sum(b);
+    }).should.throw();
+  });
+
+  it(&#39;should remove an element&#39;, function () {
+    var b = hw1.arrayMethods.remove(a, 2);
+
+    b.should.be.an.Array;
+    b.indexOf(2).should.equal(-1);
+  });
+
+  it(&#39;should find duplicates&#39;, function () {
+    var b = [ 1, 1, 2, 3, &#39;abc&#39;, &#39;def&#39;, &#39;abc&#39;, a, a, { foo: &#39;bar&#39; } ]
+      , c = hw1.arrayMethods.findDuplicates(b)
+      , cExpected = [ 1, &#39;abc&#39;, a ];
+
+    c.should.be.an.Array;
+    c.should.eql(cExpected);
+  });
+});
+</code></pre><p>The above suite shows off some simple usage of our testing libraries of choice.
+Next, let&#39;s examine some more advanced scenarios. Mocha supports async testing
+simply with a <code>done</code> function provided to test and test suite callbacks. Let&#39;s
+say we&#39;re testing the server-side <code>map-storage</code> module in HW6:</p>
+<pre><code>var should      = require(&#39;should&#39;)
+  , mapStorage  = require(&#39;../map-storage&#39;);
+
+// ------------------------------------------------------------------------
+
+describe(&#39;MapStorage&#39;, function () {
+
+  // Assume a `sampleMapTiles` array exists in scope...
+  describe(&#39;#saveMap&#39;, function () {
+    it(&#39;should save a map to disk&#39;, function (done) {
+      var mapParams = {
+        name: &#39;newMap&#39;
+      , tiles: sampleMapTiles
+      };
+
+      /*
+       * The `done` method is flexible enough to work as a node-style
+       * callback that takes `err` as its first argument.
+       */
+      mapStorage.saveMap(mapParams, done);
+    });
+  });
+
+  describe(&#39;#getMaps&#39;, function () {
+    var maps = [];
+
+    beforeEach(function (done) {
+      mapStorage.getMaps(function (mapsCollection) {
+        maps = mapsCollection;
+        done();
+      });
+    });
+
+    /*
+     * Assertions are chainable!
+     */
+    it(&#39;should fetch a valid maps collection from disk&#39;, function () {
+      maps.should.not.be.empty;
+      maps.should.be.an.Array.and.have.length(4);
+      maps[0].should.be.an.Object.and.have.keys(&#39;name&#39;, &#39;tiles&#39;);
+      maps[0].name.should.be.a.String;
+      maps[0].tiles.should.be.an.Array;
+    });
+  });
+
+});
+</code></pre><p>Cool! We&#39;ve isolated the functional pieces of this node module and tested them
+separately. But what if we want to write tests for UI code running in the
+browser? Here, we run into a number of challenges:</p>
+<ul>
+<li>Self-initialization (bootstrapping an application) &amp; singletons</li>
+<li>Encapsulated logic (IIFEs and the like)</li>
+<li>DOM event handlers</li>
+<li>XHR requests (AJAX)</li>
+<li>Nested callbacks in async code</li>
+</ul>
+<p>We&#39;ll get back to the logistics of testing UI code. First, some ideas about
+testability:</p>
+<hr>
+<h2 id="is-my-code-testable-">Is my code testable?</h2>
+<p>Right off the bat, we know there are a few avoidable anti-patterns that make a
+front end application difficult to test; these should mostly be apparent to you
+if you&#39; been paying attention to JS code style.</p>
+<pre><code>&lt;html&gt;
+  &lt;head&gt;
+    &lt;title&gt;Anti-patterns for testable UI code&lt;/title&gt;
+    &lt;style type=&quot;text/css&quot;&gt;
+      .form-msg { display: none; }
+    &lt;/style&gt;
+  &lt;/head&gt;
+
+  &lt;body&gt;
+    &lt;h2&gt;Log in&lt;/h2&gt;
+    &lt;form id=&quot;login&quot; action=&quot;#&quot;&gt;
+      &lt;input type=&quot;text&quot; id=&quot;username&quot; name=&quot;username&quot; placeholder=&quot;Username&quot; /&gt;
+      &lt;input type=&quot;password&quot; id=&quot;password&quot; name=&quot;password&quot; placeholder=&quot;Password&quot; /&gt;
+      &lt;input type=&quot;submit&quot; id=&quot;submit&quot; value=&quot;Submit&quot; /&gt;
+
+      &lt;p class=&quot;form-msg error fields-required&quot;&gt;
+        Both username and password fields are required.
+      &lt;/p&gt;
+
+      &lt;p class=&quot;form-msg success auth&quot;&gt;
+        Successfully logged in!
+      &lt;/p&gt;
+
+      &lt;p class=&quot;form-msg error auth&quot;&gt;
+        The username/password combination is incorrect.
+      &lt;/p&gt;
+
+      &lt;p class=&quot;form-msg error server&quot;&gt;
+        There was a problem authenticating the user. Please try again later.
+      &lt;/p&gt;
+    &lt;/form&gt;
+
+    &lt;!-- scripts --&gt;
+    &lt;script src=&quot;//ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js&quot;&gt;
+    &lt;/script&gt;
+
+    &lt;script type=&quot;text/javascript&quot;&gt;
+      /*
+       * This code is inaccessible to tests; you can either run all of it or
+       * none of it at once.
+       */
+      $(function () {
+
+        $(&#39;#login&#39;).on(&#39;submit&#39;, function () {
+
+          // Mixture of form logic and event logic here...
+          event.preventDefault();
+
+          var username = $(&#39;#username&#39;).val()
+            , password = $(&#39;#password&#39;).val();
+
+          if (username &amp;&amp; password) {
+            /*
+              * Requires a functioning back end...
+              */
+            $.ajax({
+              type: &#39;POST&#39;
+            , url: &#39;/authenticate_user&#39;
+            , data: {
+                username: username
+            , password: password
+              }
+            , success: function (data, status, jqXHR) {
+                $(&#39;.form-msg.success.auth&#39;).show();
+            }
+            , error: function (jqXHR, textStatus, errorThrown) {
+                $(&#39;.form-msg.error.auth&#39;).show();
+            }
+            });
+          } else {
+            $(&#39;.form-msg.fields-required&#39;).show();
+          }
+        });
+      });
+    &lt;/script&gt;
+  &lt;/body&gt;
+&lt;/html&gt;
+</code></pre><p><strong><em>Problems with the above code:</em></strong></p>
+<ul>
+<li><p>Inline JavaScript embedded in an HTML file</p>
+</li>
+<li><p>Entirely inaccessible code -- no public interfaces exist anywhere</p>
+</li>
+<li><p>No construction of a class that encapsulates logic to be tested -- in other words, a singleton that allows the results of one test to affect another</p>
+</li>
+<li><p>Callback nesting pyramid &amp; spaghetti code</p>
+</li>
+<li><p>Poorly executed DOM event handlers that mix UI &amp; business logic</p>
+</li>
+<li><p>Inline use of XHR requests</p>
+</li>
+<li><p>Asynchronous logic without any notification or event system to alert when complete</p>
+</li>
+</ul>
+<h4 id="improving-testability">Improving testability</h4>
+<p>Much of the advice we&#39;ve learned so far about client-side application structure
+and separation of concerns applies here in helping us create more testable code.
+To create <em>really</em> robust tests, however, we need to go a few steps farther and
+look into some additional testing libraries.</p>
+<p><a href="http://sinonjs.org/">SinonJS</a> is a library that provides &quot;standalone test
+spies, stubs, and mocks for JavaScript&quot;. There are other libraries that provide
+these features (Mockery, etc.), but SinonJS appears to be the most popular right
+now. Its Getting Started page gives you a good idea of the kind of testing power
+it provides you -- you can verify the behavior of callbacks &amp; their arguments,
+stub out parts of your application to reduce dynamic behavior, and present mock
+interfaces for things like AJAX requests.</p>
+<p>In addition to being full-featured and all-encompassing (there are, of course,
+also code coverage tools for JS), your tests ought to have good style on their
+own and be maintainable for future developers.  <a href="http://uxebu.com/blog/2013/01/08/make-tests-read-like-a-book/">This is a good
+article</a>
+with advice on writing more readable tests.</p>
+<hr>
+<h2 id="does-my-full-stack-work-">Does my full stack work?</h2>
+<p>In addition to <em>unit tests</em>, you will eventually also encounter <em>integration
+tests</em> and <em>end-to-end tests</em> as a front end developer.</p>
+<p><strong>Integration tests</strong> are meant to verify the joint functionality of two parts
+of your application stack -- usually, these ensure that system interfaces work
+as intended.</p>
+<p><strong>End-to-end tests</strong>, as the name implies, test the overall functionality of an
+application from the point of view of an end user. They are also the hardest to
+write and maintain because they require things like mocking out a database,
+simulating a headless browser, etc.</p>
+<p>Libraries:</p>
+<ul>
+<li><a href="http://theintern.io/">Intern</a> is a neat library that automates a full test
+stack by running a test suite across environments (browser, Node) and across
+platforms (various browsers). </li>
+<li><a href="http://docs.seleniumhq.org/">Selenium</a> allows you to automate browsers,
+primarily for testing purposes</li>
+<li><a href="http://phantomjs.org/">PhantomJS</a> lets you run headless browser automation
+(faster than Selenium)</li>
+</ul>
+<hr>
+<h2 id="js-workflow">JS Workflow</h2>
+<p>(Demonstrated in class)</p>
+<p>TDD is just one part of a serious JS developer&#39;s workflow. As your projects
+expand in scope, you&#39;ll find the need to run automated build scripts to compile
+assets &amp; templates. There are some great tools out there to do this job, but
+unfortunately there&#39;s no single standard yet. The one I use these days is called
+<a href="http://gulpjs.com/">Gulp</a> -- it&#39;s a build system that makes heavy use of
+<em>Streams</em>. It&#39;s a step forward from the widely-used
+<a href="http://gruntjs.com/">Grunt</a>, which doesn&#39;t handle chaining &amp; composition of
+tasks very well. Even more experimental is a tool called
+<a href="http://www.solitr.com/blog/2014/02/broccoli-first-release/">Broccoli</a>, which
+aims to provide fast rebuilds and a nicer API for complicated plugin
+composition.</p>
+<p>There is a good amount of development being done on all of these libraries
+(notice that they&#39;re all at version <code>&lt;1.0</code>). When selecting a build tool, keep
+in mind that for most people, value is only derived if the community plugins for
+the tool (CoffeeScript &amp; SASS compilers, test runners, requireJS builders, etc.)
+are sufficiently populated.</p>
+
+      </section>
+      <section class="pure-u-3-4 notes coffeescript language-coffeescript"><h1 id="coffeescript">CoffeeScript</h1>
+<h2 id="why-use-a-language-that-_compiles_-to-javascript-">Why use a language that <em>compiles</em> to JavaScript?</h2>
+<p>As you write more JavaScript, you might get tired of avoiding the bad parts,
+want things like static typing, or even just find JavaScript&#39;s syntax too clunky
+for your taste. However, you can&#39;t just start using a random other language
+instead of JavaScript because no other languages run in the browser.</p>
+<p>That&#39;s why compile to JavaScript languages exist. They let you write in a
+different language, and a cross-compiler converts it to JS so you can run it in
+the browser.</p>
+<p>CoffeeScript is probably the most popular compile-to-js language. It lets you
+write less code that automatically passes JSHint and is arguably more readable.
+There are other options like Dart by Google and TypeScript by Microsoft that
+provides static typing, but those won&#39;t be covered here.</p>
+<h2 id="quick-overview-of-coffeescript-syntax">Quick overview of CoffeeScript syntax</h2>
+<p>Note: Taken and adapted from <a href="http://www.coffeescript.org">coffeescript.org</a></p>
+<pre><code># Assignment:
+number   = 42
+
+# Conditions:
+if number == 42
+  console.log &#39;here&#39;
+  console.log &#39;number is 42&#39;
+else
+  console.log(&quot;number is &quot;)
+# Existence:
+alert &quot;I knew it!&quot; if elvis?
+
+# Functions:
+square = (x) -&gt; x * x
+
+# Objects:
+math =
+  root:   Math.sqrt
+  square: square
+  cube:   (x) -&gt; x * square x
+  nested1: {a: 1, b: 2}
+  nested2:
+    a: 1
+    b: 2
+
+list = [1, 2, 3, 4, 5]
+# Array comprehensions:
+cubes = (math.cube num for num in list when num &gt; 2)
+
+# for in loops
+# prints 1, 2, 3, 4, 5 not 0, 1, 2, 3, 4, 5
+for el in list
+  console.log e
+
+for k, v of math
+  console.log k, v
+</code></pre><p>Some things to note:</p>
+<ul>
+<li><p>There are no semicolons. It actually results in a compiler error if you end a
+line with one. This makes it impossible to have those weird semicolon
+insertion bugs.</p>
+</li>
+<li><p>There are no <code>var</code>s. The <code>var</code> keyword is undefined in CoffeeScript. Variables
+are local by default. If you want to make it global you need to attach it to a
+global object like <code>window</code>. This prevents accidentally creating global
+variables, and some easy to miss bugs caused by variable hoisting.</p>
+</li>
+<li><p>CoffeeScript is whitespace sensitive. See in the if statement, instead of
+using braces, the code is just tabbed over.</p>
+</li>
+<li><p>You don&#39;t need to use <code>===</code>, it&#39;s actually a compiler error. <code>==</code> are
+converted to <code>===</code> during the compilation.</p>
+</li>
+<li><p>You don&#39;t need to use <code>()</code> when calling a function with arguments. This can
+get confusing with nested function calls, though. Also you need the parentheses
+when calling a function without arguments (unlike Ruby).</p>
+</li>
+<li><p>CoffeeScript has syntactic sugar for string interpolation, letting you insert
+CoffeeScript code in the middle of the string with <code>\#\{\}</code>. This only works
+inside double quotes, though.    </p>
+</li>
+<li><p>Everything is a statement, so you can use Ruby style one line if statements,
+i.e. <code>doSomething() if condition</code>.</p>
+</li>
+<li><p>CoffeeScript has an existential operator <code>?</code>. It compiles to
+<code>typeof elvis !== &quot;undefined&quot; &amp;&amp; elvis !== null</code>.</p>
+</li>
+<li><p>Functions are defined with <code>() -&gt;</code>. The arguments go in the parentheses and
+once again it&#39;s whitespace sensitive instead of using braces.</p>
+</li>
+<li><p>Functions implicitly return the last line. Explicit <code>return</code> statements can
+also be used.</p>
+</li>
+<li><p>Objects can be defined either by using whitespace and ommiting the braces and
+commas, or in the standard way. Nested objects also work fine either way.</p>
+</li>
+<li><p>CoffeeScript supports list comprehensions similar to python.</p>
+</li>
+<li><p>For in loops on lists work as you would expect coming from other languages.
+It iterates over the elements instead of the indices.</p>
+</li>
+<li><p>CoffeeScript has <code>for of</code> loops for iterating over keys/values objects.</p>
+</li>
+</ul>
+<h2 id="coffeescript-s-more-interesting-features">CoffeeScript&#39;s more interesting features</h2>
+<p><strong>Classes</strong>:</p>
+<p>CoffeeScript provides some nice abstraction for object oriented programming.</p>
+<pre><code>class Animal
+  constructor: (@name) -&gt;
+
+  move: (meters) -&gt;
+    alert @name + &quot; moved m.&quot;
+
+class Snake extends Animal
+  move: -&gt;
+    alert &quot;Slithering...&quot;
+    super 5
+
+class Horse extends Animal
+  move: -&gt;
+    alert &quot;Galloping...&quot;
+    super 45
+
+sam = new Snake &quot;Sammy the Python&quot;
+tom = new Horse &quot;Tommy the Palomino&quot;
+
+sam.move()
+tom.move()
+</code></pre><p>Some things to note:</p>
+<ul>
+<li><p>You don&#39;t have to use the convoluted psuedo-class construction with
+prototypes. You just use the keyword <code>class</code> and list out (class &amp; instance)
+methods &amp; properties. (You can still access <code>.prototype</code> using the <code>::</code>
+operator, though).</p>
+</li>
+<li><p>If you define a <code>constructor</code> function, it is called when an object is
+instantiated.</p>
+</li>
+<li><p><code>@</code> is syntactic sugar for <code>this.</code> access.</p>
+</li>
+<li><p>To set up inheritance, just use the word <code>extends</code>, similar to Java.</p>
+</li>
+<li><p>You can call the overridden superclass&#39;s function using the <code>super</code> keyword.</p>
+</li>
+</ul>
+<p><strong>Fat Arrow</strong>:</p>
+<p>When defining a function, you can use a fat arrow <code>=&gt;</code> (instead of <code>-&gt;</code>) to bind
+a function to the current value of <code>this</code>. This is useful for setting callbacks,
+among other things.</p>
+<pre><code>Account = (customer, cart) -&gt;
+  @customer = customer
+  @cart = cart
+
+  $(&#39;.shopping_cart&#39;).bind &#39;click&#39;, (event) =&gt;
+    @customer.purchase @cart
+</code></pre><h2 id="how-to-use-coffeescript">How to use CoffeeScript</h2>
+<p>Install <code>coffee</code> globally with <code>sudo npm install -g coffee-script</code>.</p>
+<p>The standard file extension is <code>.coffee</code>. You can run a file without compiling
+it using <code>coffee &lt;name&gt;.coffee</code>.</p>
+<p>You&#39;ll generally want to have your CoffeeScript files automatically compiled.
+You can do this with a command like <code>coffee -mo js/ -cw coffee/</code>.
+In particular, this will:</p>
+<ul>
+<li>take all of the <code>name&gt;.coffee</code> files in the <code>coffee/</code> directory and save
+them to <code>&lt;name&gt;.js</code> in the <code>js/</code> directory</li>
+<li>update the files in <code>js/</code> as the files in <code>coffee/</code> change</li>
+<li>create source maps, allowing the browser to give you line numbers in your
+CoffeeScript files for errors instead of the line numbers in your compiled
+JS files.</li>
+</ul>
+
+      </section>
+      <section class="pure-u-3-4 notes d3 language-javascript"><h1 id="data-visualization-with-d3-js">Data Visualization with D3.js</h1>
+<p><em>April 30, 2014</em></p>
 
       </section>
     </div>
